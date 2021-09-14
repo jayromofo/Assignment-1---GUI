@@ -10,12 +10,10 @@ public class AppGui {
 
         StudentFrame app = new StudentFrame("Student Records");
 
-        app.setSize(350, 250);
+        app.setSize(600, 200);
         app.setResizable(false);
 
         app.setVisible(true);
         app.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-
     }
 }
