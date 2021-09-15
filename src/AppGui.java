@@ -8,6 +8,7 @@ import javax.swing.*;
 public class AppGui {
     public static void main(String[] args) {
 
+        // Create the application
         StudentFrame app = new StudentFrame("Student Records");
 
         app.setSize(600, 200);
