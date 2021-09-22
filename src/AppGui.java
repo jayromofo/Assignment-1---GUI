@@ -15,7 +15,7 @@ public class AppGui {
         double[] studentMarks = {90, 57, 76, 57, 45, 76};
         Student student1 = new Student("Jason", "Rossetti", "CPA", studentMarks);
 
-
+        app.initialize(student1);
 
         app.setVisible(true);
         app.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

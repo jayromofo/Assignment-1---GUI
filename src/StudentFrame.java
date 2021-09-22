@@ -41,6 +41,7 @@ public class StudentFrame extends JFrame {
     private JPanel panMarkArea = new JPanel(new BorderLayout());
     // Panel that holds all the mark text boxes
     private JPanel panMarks = new JPanel(new GridLayout(2, 3));
+    private JTextField[] txtMarks = new JTextField[6];
     private JTextField txtMark1 = new JTextField();
     private JTextField txtMark2 = new JTextField();
     private JTextField txtMark3 = new JTextField();
@@ -74,14 +75,24 @@ public class StudentFrame extends JFrame {
 
         // Add the label and marks to the mark area panel
         panMarkArea.add(lblMarks, BorderLayout.NORTH);
-        panMarks.add(txtMark1);
-        panMarks.add(txtMark2);
-        panMarks.add(txtMark3);
-        panMarks.add(txtMark4);
-        panMarks.add(txtMark5);
-        panMarks.add(txtMark6);
-        panMarkArea.add(panMarks, BorderLayout.CENTER);
+//        panMarks.add(txtMark1);
+//        panMarks.add(txtMark2);
+//        panMarks.add(txtMark3);
+//        panMarks.add(txtMark4);
+//        panMarks.add(txtMark5);
+//        panMarks.add(txtMark6);
+        // Try out array
+        txtMarks[0] = txtMark1;
+        txtMarks[1] = txtMark2;
+        txtMarks[2] = txtMark3;
+        txtMarks[3] = txtMark4;
+        txtMarks[4] = txtMark5;
+        txtMarks[5] = txtMark6;
+        for (JTextField mark : txtMarks) {
+            panMarks.add(mark);
+        }
 
+        panMarkArea.add(panMarks, BorderLayout.CENTER);
 
         // Add the areas into the parent panel and set positioning as a border layout
         panStudent.add(btnPrev, BorderLayout.WEST);
@@ -93,7 +104,16 @@ public class StudentFrame extends JFrame {
         invalidate(); validate();
     }
 
-    public void initialize() {
+    public void initialize(Student student) {
+        txtID.setText(student.getStudentID());
+        txtFirstName.setText(student.getFname());
+        txtLastName.setText(student.getLname());
+        txtProgram.setText(student.getProgram());
+        double[] studentMarks = student.getMarks();
+
+        for (int i = 0; i < studentMarks.length; i++) {
+            txtMarks[i].setText(String.valueOf(studentMarks[i]));
+        }
 
     }
 }
