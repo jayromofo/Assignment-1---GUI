@@ -92,4 +92,8 @@ public class StudentFrame extends JFrame {
         getContentPane().add(panStudent);
         invalidate(); validate();
     }
+
+    public void initialize() {
+
+    }
 }
