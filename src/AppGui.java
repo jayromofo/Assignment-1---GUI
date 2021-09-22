@@ -13,6 +13,10 @@ public class AppGui {
 
         app.setSize(600, 200);
         app.setResizable(false);
+        double[] studentMarks = {90, 57, 76, 57, 45, 76};
+        Student student1 = new Student("Jason", "Rossetti", "CPA", studentMarks);
+
+
 
         app.setVisible(true);
         app.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
