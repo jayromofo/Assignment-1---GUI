@@ -16,6 +16,7 @@ public class AppGui {
 
 
         app.setVisible(true);
+
         app.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 }

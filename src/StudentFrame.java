@@ -12,43 +12,43 @@ import java.util.ArrayList;
 public class StudentFrame extends JFrame implements ActionListener {
 
     // Parent Panel
-    private JPanel panStudent = new JPanel(new BorderLayout());
+    private final JPanel panStudent = new JPanel(new BorderLayout());
 
-    private JButton btnPrev = new JButton("Prev");
-    private JButton btnNext = new JButton("Next");
+    private final JButton btnPrev = new JButton("Prev");
+    private final JButton btnNext = new JButton("Next");
 
     // Center panel that holds the buttons and the information fields
-    private JPanel panCenter = new JPanel(new BorderLayout());
-    private JPanel panFields = new JPanel(new GridLayout(2, 4));
-    private JLabel lblID = new JLabel("ID: ");
-    private JTextField txtID = new JTextField(12);
-    private JLabel lblFirstName = new JLabel("First Name: ");
-    private JTextField txtFirstName = new JTextField(12);
-    private JLabel lblLastName = new JLabel("Last Name: ");
-    private JTextField txtLastName = new JTextField(12);
-    private JLabel lblProgram = new JLabel("Program: ");
-    private JTextField txtProgram = new JTextField(12);
+    private final JPanel panCenter = new JPanel(new BorderLayout());
+    private final JPanel panFields = new JPanel(new GridLayout(2, 4));
+    private final JLabel lblID = new JLabel("ID: ");
+    private final JTextField txtID = new JTextField(12);
+    private final JLabel lblFirstName = new JLabel("First Name: ");
+    private final JTextField txtFirstName = new JTextField(12);
+    private final JLabel lblLastName = new JLabel("Last Name: ");
+    private final JTextField txtLastName = new JTextField(12);
+    private final JLabel lblProgram = new JLabel("Program: ");
+    private final JTextField txtProgram = new JTextField(12);
 
     // Panel that holds all the buttons
-    private JPanel panButtonRow = new JPanel(new GridLayout(1, 4));
-    private JButton btnLoad = new JButton("Load");
-    private JButton btnEdit = new JButton("Edit");
-    private JButton btnAdd = new JButton("Add");
-    private JButton btnSave = new JButton("Save");
+    private final JPanel panButtonRow = new JPanel(new GridLayout(1, 4));
+    private final JButton btnLoad = new JButton("Load");
+    private final JButton btnEdit = new JButton("Edit");
+    private final JButton btnAdd = new JButton("Add");
+    private final JButton btnSave = new JButton("Save");
 
     // Bottom portion of the frame
-    private JLabel lblMarks = new JLabel("Marks");
+    private final JLabel lblMarks = new JLabel("Marks");
     // Parent panel for the mark area
-    private JPanel panMarkArea = new JPanel(new BorderLayout());
+    private final JPanel panMarkArea = new JPanel(new BorderLayout());
     // Panel that holds all the mark text boxes
-    private JPanel panMarks = new JPanel(new GridLayout(2, 3));
-    private JTextField[] txtMarks = new JTextField[6];
-    private JTextField txtMark1 = new JTextField();
-    private JTextField txtMark2 = new JTextField();
-    private JTextField txtMark3 = new JTextField();
-    private JTextField txtMark4 = new JTextField();
-    private JTextField txtMark5 = new JTextField();
-    private JTextField txtMark6 = new JTextField();
+    private final JPanel panMarks = new JPanel(new GridLayout(2, 3));
+    private final JTextField[] txtMarks = new JTextField[6];
+    private final JTextField txtMark1 = new JTextField();
+    private final JTextField txtMark2 = new JTextField();
+    private final JTextField txtMark3 = new JTextField();
+    private final JTextField txtMark4 = new JTextField();
+    private final JTextField txtMark5 = new JTextField();
+    private final JTextField txtMark6 = new JTextField();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // ArrayList that holds all the students
@@ -60,7 +60,6 @@ public class StudentFrame extends JFrame implements ActionListener {
         super(name);
         // Generate fields
         generateFields();
-
         // Startup state for text boxes and buttons
         setInitialState();
 
@@ -73,14 +72,16 @@ public class StudentFrame extends JFrame implements ActionListener {
         btnAdd.addActionListener(e -> {
             if (e.getSource() == btnAdd) {
                 // Clear all information
+                update();
                 clearText();
                 clearMarks();
                 // Create new student and add to the list
                 Student newStudent = new Student();
                 studentList.add(newStudent);
+                System.out.println("Student Added to List"); // DEBUG to make sure button is being called
+                currentIndex = newStudent.getNextNum() - 1;
                 // Put the current student ID in text field
                 String id = newStudent.getStudentID();
-                System.out.println("Student Added to List"); // DEBUG to make sure button is being called
                 btnEdit.setEnabled(true);
                 btnEdit.setText("Done");
                 btnAdd.setEnabled(false);
@@ -101,6 +102,8 @@ public class StudentFrame extends JFrame implements ActionListener {
                 try
                 {
                     createStudent();
+                    displayCurrentStudent(studentList.get(currentIndex));
+                    System.out.println(currentIndex);
 
                 }
                 catch (Exception ex) {
@@ -110,7 +113,7 @@ public class StudentFrame extends JFrame implements ActionListener {
                     btnEdit.setText("Edit");
                     btnAdd.setEnabled(true);
                     btnLoad.setEnabled(true);
-                    displayCurrentStudent();
+
                     update();
                 }
             });
@@ -199,20 +202,34 @@ public class StudentFrame extends JFrame implements ActionListener {
         System.out.println("From Update\nIndex: "+currentIndex +"\tList Length: "+ studentList.size());
         try
         {
+
             if (studentList.isEmpty()) {
                 btnPrev.setEnabled(false);
                 btnNext.setEnabled(false);
             }
 
-            if (length > 0 && currentIndex >= 0){
-                btnNext.setEnabled(true);
+
+            if (currentIndex >= 0 && currentIndex < length){
+                if (currentIndex == 0) {
+                    btnPrev.setEnabled(false);
+                }
+
+                if (currentIndex == (length - 1)){
+                    btnNext.setEnabled(false);
+                }
+
+                if (length > 1 && currentIndex >= 0){
+                    btnNext.setEnabled(true);
+                }
+                if (currentIndex <= length && currentIndex != 0) {
+                    btnPrev.setEnabled(true);
+                }
+
             }
-            if (currentIndex <= length && currentIndex != 0) {
-                btnPrev.setEnabled(true);
-            }
+
         }
-        catch (IndexOutOfBoundsException e) {
-            JOptionPane.showInputDialog(e.getMessage());
+        catch (Exception e) {
+            e.printStackTrace();
         }
 
     }
@@ -270,6 +287,7 @@ public class StudentFrame extends JFrame implements ActionListener {
         currentStudent.setProgram(program);
         currentStudent.setMarks(studentMarks);
         currentIndex = studentList.size() - 1;
+        update();
     }
 
     private void displayCurrentStudent(Student student) {
@@ -278,19 +296,34 @@ public class StudentFrame extends JFrame implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent e) {
+
+        // TODO: Need to do some in range validation 0 < length
         if (e.getSource() == btnPrev) {
-            currentIndex = Student.getNextNum() - 1;
-            loadStudent(studentList.get(currentIndex));
-            System.out.println("Current Index: "+ currentIndex);
-            update();
+            if (currentIndex >= 0) {
+                currentIndex -= 1;
+                loadStudent(studentList.get(currentIndex));
+                System.out.println("Current Index: "+ currentIndex);
+                System.out.println("Next index from Prev is: "+ currentIndex);
+                update();
+            } else {
+                System.out.println("Out of range");
+            }
 
-        } else if (e.getSource() == btnNext) {
-            currentIndex = Student.getNextNum();
-            loadStudent(studentList.get(currentIndex));
-            System.out.println("Current Index: "+ currentIndex);
-            update();
         }
-
+        if (e.getSource() == btnNext) {
+            if (currentIndex == studentList.size() - 1) {
+                btnNext.setEnabled(false);
+            }
+            if (currentIndex < studentList.size() - 1){
+                currentIndex += 1;
+                loadStudent(studentList.get(currentIndex));
+                System.out.println("Current Index: "+ currentIndex);
+                System.out.println("Next index from Next is: "+ currentIndex);
+                update();
+            } else {
+                System.out.println("Out of range");
+            }
+        }
     }
 
     public void loadStudent(Student student) {
@@ -298,5 +331,12 @@ public class StudentFrame extends JFrame implements ActionListener {
         txtProgram.setText(student.getProgram());
         txtFirstName.setText(student.getFname());
         txtLastName.setText(student.getLname());
+
+        int i = 0;
+        for (double mk : student.getMarks()){
+            txtMarks[i].setText(String.valueOf(mk));
+        }
+        update();
     }
+
 } // END CLASS
