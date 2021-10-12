@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.util.ArrayList;
 
 /**
  * Project: Assignment 1 - GUI
@@ -13,13 +14,10 @@ public class AppGui {
         app.setSize(600, 200);
         app.setResizable(false);
 
-        // Create record
-        double[] studentMarks = {90, 57, 76, 57, 45, 76};
-        Student student1 = new Student("Jason", "Rossetti", "CPA", studentMarks);
-        // Initialize record
-        app.initialize(student1);
 
         app.setVisible(true);
         app.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 }
+
+// TODO: Fix Prev and Next Buttons. Keep track of current student and (nextStudent -1) to choose which student

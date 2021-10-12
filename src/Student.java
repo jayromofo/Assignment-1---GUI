@@ -130,6 +130,10 @@ public class Student {
     public void setProgram(String program) {
         this.program = program;
     }
+
+    public static int getNextNum() {
+        return nextNum;
+    }
     
     ///// End Student Class /////////////////////////////////////
     
