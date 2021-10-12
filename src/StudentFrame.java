@@ -70,7 +70,6 @@ public class StudentFrame extends JFrame implements ActionListener {
 
         // Add Button
         btnAdd.addActionListener(e -> {
-            if (e.getSource() == btnAdd) {
                 // Clear all information
                 update();
                 clearText();
@@ -92,10 +91,8 @@ public class StudentFrame extends JFrame implements ActionListener {
                 btnNext.setEnabled(false);
                 // Enable text boxes for input
                 enableTextBoxes(true);
-
                 // Setup next student number to be used
                 txtID.setText(id);
-            }
 
             // Using the event button inside the Add button
             btnEdit.addActionListener(ev -> {
@@ -104,6 +101,7 @@ public class StudentFrame extends JFrame implements ActionListener {
                     createStudent();
                     displayCurrentStudent(studentList.get(currentIndex));
                     System.out.println(currentIndex);
+                    update();
 
                 }
                 catch (Exception ex) {
@@ -114,7 +112,7 @@ public class StudentFrame extends JFrame implements ActionListener {
                     btnAdd.setEnabled(true);
                     btnLoad.setEnabled(true);
 
-                    update();
+
                 }
             });
         });
@@ -172,6 +170,7 @@ public class StudentFrame extends JFrame implements ActionListener {
 
         getContentPane().add(panStudent);
         invalidate(); validate();
+
     }
 
     // Set the inital state for the program
@@ -202,30 +201,28 @@ public class StudentFrame extends JFrame implements ActionListener {
         System.out.println("From Update\nIndex: "+currentIndex +"\tList Length: "+ studentList.size());
         try
         {
-
+            btnNext.setEnabled(true);
+            btnPrev.setEnabled(true);
+            System.out.println("Index: "+currentIndex +"\tList - 1: "+ (length - 1));
+            // If StudentList is empty buttons disabled
             if (studentList.isEmpty()) {
                 btnPrev.setEnabled(false);
                 btnNext.setEnabled(false);
             }
 
-
-            if (currentIndex >= 0 && currentIndex < length){
-                if (currentIndex == 0) {
-                    btnPrev.setEnabled(false);
-                }
-
-                if (currentIndex == (length - 1)){
-                    btnNext.setEnabled(false);
-                }
-
-                if (length > 1 && currentIndex >= 0){
-                    btnNext.setEnabled(true);
-                }
-                if (currentIndex <= length && currentIndex != 0) {
-                    btnPrev.setEnabled(true);
-                }
-
+            // If index is 0 prev disabled
+            if (currentIndex == 0) {
+                btnPrev.setEnabled(false);
+            }  else if (currentIndex == (length - 1) || studentList.size() == 1){
+                btnNext.setEnabled(false);
             }
+
+
+
+            // If index ==  length - 1 next disable
+
+
+
 
         }
         catch (Exception e) {
@@ -299,27 +296,24 @@ public class StudentFrame extends JFrame implements ActionListener {
 
         // TODO: Need to do some in range validation 0 < length
         if (e.getSource() == btnPrev) {
-            if (currentIndex >= 0) {
+            update();
+            if (currentIndex > 0) {
                 currentIndex -= 1;
                 loadStudent(studentList.get(currentIndex));
                 System.out.println("Current Index: "+ currentIndex);
                 System.out.println("Next index from Prev is: "+ currentIndex);
-                update();
             } else {
                 System.out.println("Out of range");
             }
 
         }
         if (e.getSource() == btnNext) {
-            if (currentIndex == studentList.size() - 1) {
-                btnNext.setEnabled(false);
-            }
+            update();
             if (currentIndex < studentList.size() - 1){
                 currentIndex += 1;
                 loadStudent(studentList.get(currentIndex));
                 System.out.println("Current Index: "+ currentIndex);
                 System.out.println("Next index from Next is: "+ currentIndex);
-                update();
             } else {
                 System.out.println("Out of range");
             }
