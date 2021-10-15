@@ -3,7 +3,6 @@
  * @author <a href="mailto:James.Ronholm@CanadoreCollege.ca">James Ronholm</a>
  * @version Oct 4, 2020
  */
-
 public class Student {
     private static int nextNum = 0;
     private final static String numPrefix = "A";

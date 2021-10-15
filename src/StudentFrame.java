@@ -1,15 +1,13 @@
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.nio.InvalidMarkException;
-import java.util.ArrayList;
-
 /**
  * Project: Assignment 2 - Events and Listeners
  * Author: Jason Rossetti
  * Created: 2021-10-11
  */
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
 public class StudentFrame extends JFrame implements ActionListener {
 
     // Parent Panel
@@ -39,7 +37,7 @@ public class StudentFrame extends JFrame implements ActionListener {
 
     // Bottom portion of the frame
     private final JLabel lblMarks = new JLabel("Marks");
-    // Parent panel for the mark area
+    // Parent panel of the mark area
     private final JPanel panMarkArea = new JPanel(new BorderLayout());
     // Panel that holds all the mark text boxes
     private final JPanel panMarks = new JPanel(new GridLayout(2, 3));
@@ -56,6 +54,7 @@ public class StudentFrame extends JFrame implements ActionListener {
     // TODO: Find a better place for this??
     final static ArrayList<Student> studentList = new ArrayList<>();
     static int currentIndex = 0;
+    final static boolean DEBUGMODE = true;
 
     public StudentFrame(String name){
         super(name);
@@ -76,7 +75,9 @@ public class StudentFrame extends JFrame implements ActionListener {
                 // Create new student and add to the list
                 Student newStudent = new Student();
                 studentList.add(newStudent);
-                System.out.println("Student Added to List"); // DEBUG to make sure button is being called
+                if (DEBUGMODE){
+                    System.out.println("Student Added to List"); // DEBUG to make sure button is being called
+                }
                 currentIndex = newStudent.getNextNum() - 1;
                 // Put the current student ID in text field
                 String id = newStudent.getStudentID();
@@ -98,8 +99,10 @@ public class StudentFrame extends JFrame implements ActionListener {
                 try
                 {
                     createStudent();
-                    displayCurrentStudent(studentList.get(currentIndex));
-                    System.out.println(currentIndex);
+                    enableTextBoxes(false);
+                    if (DEBUGMODE){
+                        System.out.println(currentIndex); // DEBUG
+                    }
                     update();
 
                 }
@@ -192,12 +195,16 @@ public class StudentFrame extends JFrame implements ActionListener {
     // Use this after each event to keep it up to date
     public void update() {
         int length = studentList.size();
-        System.out.println("From Update\nIndex: "+currentIndex +"\tList Length: "+ studentList.size()); // DEBUG
+        if (DEBUGMODE){
+            System.out.println("From Update\nIndex: "+currentIndex +"\tList Length: "+ studentList.size()); // DEBUG
+        }
         try
         {
             btnNext.setEnabled(true);
             btnPrev.setEnabled(true);
-            System.out.println("Index: "+currentIndex +"\tList - 1: "+ (length - 1)); // DEBUG
+            if (DEBUGMODE){
+                System.out.println("Index: "+currentIndex +"\tList - 1: "+ (length - 1)); // DEBUG
+            }
             // If StudentList is empty buttons are disabled START STATE
             if (studentList.isEmpty()) {
                 btnPrev.setEnabled(false);
@@ -216,7 +223,7 @@ public class StudentFrame extends JFrame implements ActionListener {
 
     }
 
-    // Clear all of the mark values
+    // Clear the mark values
     private void clearMarks() {
         for (JTextField marks : txtMarks) {
             marks.setText("");
@@ -261,9 +268,6 @@ public class StudentFrame extends JFrame implements ActionListener {
             studentMarks[markIndex] = Double.parseDouble(mk.getText());
             markIndex++;
         }
-
-
-
         // Set the student information with the text box information
         currentStudent.setFname(firstName);
         currentStudent.setLname(lastName);
@@ -271,28 +275,24 @@ public class StudentFrame extends JFrame implements ActionListener {
         currentStudent.setMarks(studentMarks);
         // Repositions the current index
         currentIndex = studentList.size() - 1;
-        update();
+        //update();
     }
 
-    // Displays the current student with no access to the text boxes
-    private void displayCurrentStudent(Student student) {
-        enableTextBoxes(false);
-    }
-
+    // Event Handlers for the buttons
     public void actionPerformed(ActionEvent e) {
-
         // When Next Button is clicked, it increases the index by 1 and loads that student.
         if (e.getSource() == btnPrev) {
             update();
             if (currentIndex > 0) {
                 currentIndex -= 1;
                 loadStudent(studentList.get(currentIndex));
-                System.out.println("Current Index: "+ currentIndex); // DEBUG
-                System.out.println("Next index from Prev is: "+ currentIndex); // DEBUG
+                if (DEBUGMODE){
+                    System.out.println("Current Index: "+ currentIndex); // DEBUG
+                    System.out.println("Next index from Prev is: "+ currentIndex); // DEBUG
+                }
             } else {
                 System.out.println("Out of range");
             }
-
         }
         // When Next Button is clicked, it increases the index by 1 and loads that student.
         if (e.getSource() == btnNext) {
@@ -300,8 +300,10 @@ public class StudentFrame extends JFrame implements ActionListener {
             if (currentIndex < studentList.size() - 1){
                 currentIndex += 1;
                 loadStudent(studentList.get(currentIndex));
-                System.out.println("Current Index: "+ currentIndex); // DEBUG
-                System.out.println("Next index from Next is: "+ currentIndex); // DEBUG
+                if (DEBUGMODE){
+                    System.out.println("Current Index: "+ currentIndex); // DEBUG
+                    System.out.println("Next index from Next is: "+ currentIndex); // DEBUG
+                }
             } else {
                 System.out.println("Out of range");
             }
@@ -316,16 +318,16 @@ public class StudentFrame extends JFrame implements ActionListener {
         txtLastName.setText(student.getLname());
         // Counter for the list of marks
         int i = 0;
-        // Set each mark textbox
+        // Set each mark text box
         for (double mark : student.getMarks()){
             txtMarks[i].setText(String.valueOf(mark));
             ++i;
         }
-        // DEBUG
-        double[] marks = student.getMarks(); // DEBUG
-        System.out.printf("LOADING STUDENT: %s %s %s %s", student.getStudentID(), student.getFname(), student.getLname(), student.getProgram()); // DEBUG
-        System.out.printf("GRADES: %2f %2f %2f %2f %2f %2f", marks[0], marks[1], marks[2], marks[3], marks[4], marks[5]); // DEBUG
+        if (DEBUGMODE){
+            double[] marks = student.getMarks(); // DEBUG
+            System.out.printf("LOADING STUDENT: %s %s %s %s\n", student.getStudentID(), student.getFname(), student.getLname(), student.getProgram()); // DEBUG
+            System.out.printf("GRADES: %2f %2f %2f %2f %2f %2f", marks[0], marks[1], marks[2], marks[3], marks[4], marks[5]); // DEBUG
+        }
         update();
     }
-
 } // END CLASS
