@@ -66,6 +66,13 @@ public class StudentFrame extends JFrame implements ActionListener {
         // ACTION LISTENERS
         ///////////////////////////////////////////////////////////
 
+        btnLoad.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("Load Button Pressed");
+            }
+        });
+
         // Add Button
         btnAdd.addActionListener(e -> {
                 // Clear all information
