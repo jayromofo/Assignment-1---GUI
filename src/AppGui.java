@@ -1,5 +1,5 @@
 /**
- * Project: Assignment 1 - GUI
+ * Project: Assignment 2 - Events and Listeners
  * Author: Jason Rossetti
  * Created: 2021-09-14
  */
@@ -8,7 +8,6 @@
         the check boxes
  */
 import javax.swing.*;
-
 
 public class AppGui {
     public static void main(String[] args) {

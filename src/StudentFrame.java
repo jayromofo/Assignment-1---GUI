@@ -8,14 +8,13 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+
 public class StudentFrame extends JFrame implements ActionListener {
 
     // Parent Panel
     private final JPanel panStudent = new JPanel(new BorderLayout());
-
     private final JButton btnPrev = new JButton("Prev");
     private final JButton btnNext = new JButton("Next");
-
     // Center panel that holds the buttons and the information fields
     private final JPanel panCenter = new JPanel(new BorderLayout());
     private final JPanel panFields = new JPanel(new GridLayout(2, 4));
@@ -27,14 +26,12 @@ public class StudentFrame extends JFrame implements ActionListener {
     private final JTextField txtLastName = new JTextField(12);
     private final JLabel lblProgram = new JLabel("Program: ");
     private final JTextField txtProgram = new JTextField(12);
-
     // Panel that holds all the buttons
     private final JPanel panButtonRow = new JPanel(new GridLayout(1, 4));
     private final JButton btnLoad = new JButton("Load");
     private final JButton btnEdit = new JButton("Edit");
     private final JButton btnAdd = new JButton("Add");
     private final JButton btnSave = new JButton("Save");
-
     // Bottom portion of the frame
     private final JLabel lblMarks = new JLabel("Marks");
     // Parent panel of the mark area
@@ -42,20 +39,15 @@ public class StudentFrame extends JFrame implements ActionListener {
     // Panel that holds all the mark text boxes
     private final JPanel panMarks = new JPanel(new GridLayout(2, 3));
     private final JTextField[] txtMarks = new JTextField[6];
-    private final JTextField txtMark1 = new JTextField();
-    private final JTextField txtMark2 = new JTextField();
-    private final JTextField txtMark3 = new JTextField();
-    private final JTextField txtMark4 = new JTextField();
-    private final JTextField txtMark5 = new JTextField();
-    private final JTextField txtMark6 = new JTextField();
+    // Student List
+    private final static ArrayList<Student> studentList = new ArrayList<>();
+    private static int currentIndex = 0;
+    private final static boolean DEBUGMODE = true;  // Turns on/off debug mode
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // ArrayList that holds all the students
-    // TODO: Find a better place for this??
-    final static ArrayList<Student> studentList = new ArrayList<>();
-    static int currentIndex = 0;
-    final static boolean DEBUGMODE = true;
-
+    // FUNCTIONS
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor for the Student Frame
     public StudentFrame(String name){
         super(name);
         // Generate fields
@@ -66,14 +58,7 @@ public class StudentFrame extends JFrame implements ActionListener {
         // ACTION LISTENERS
         ///////////////////////////////////////////////////////////
 
-        btnLoad.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("Load Button Pressed");
-            }
-        });
-
-        // Add Button
+        // Add Button Event
         btnAdd.addActionListener(e -> {
                 // Clear all information
                 update();
@@ -132,7 +117,7 @@ public class StudentFrame extends JFrame implements ActionListener {
     } // End JFrame
 
     // Generate all the components of the frame
-    public void generateFields() {
+    private void generateFields() {
         // Add all the student fields to center panel
         panFields.add(lblID);
         panFields.add(txtID);
@@ -152,16 +137,10 @@ public class StudentFrame extends JFrame implements ActionListener {
         panCenter.add(panButtonRow, BorderLayout.SOUTH);
         // Add the label and marks to the mark area panel
         panMarkArea.add(lblMarks, BorderLayout.NORTH);
-        // Try out array
-        txtMarks[0] = txtMark1;
-        txtMarks[1] = txtMark2;
-        txtMarks[2] = txtMark3;
-        txtMarks[3] = txtMark4;
-        txtMarks[4] = txtMark5;
-        txtMarks[5] = txtMark6;
-        // Add all the marks to the mark panel
-        for (JTextField mark : txtMarks) {
-            panMarks.add(mark);
+        // Create 6 text fields for marks array
+        for (int i=0; i<6; i++) {
+            txtMarks[i] = new JTextField();
+            panMarks.add(txtMarks[i]);
         }
         // Add mark panel to the mark area panel
         panMarkArea.add(panMarks, BorderLayout.CENTER);
@@ -197,10 +176,9 @@ public class StudentFrame extends JFrame implements ActionListener {
         }
         update();
     }
-
     // Update all the information to get the button states
     // Use this after each event to keep it up to date
-    public void update() {
+    private void update() {
         int length = studentList.size();
         if (DEBUGMODE){
             System.out.println("From Update\nIndex: "+currentIndex +"\tList Length: "+ studentList.size()); // DEBUG
@@ -229,14 +207,12 @@ public class StudentFrame extends JFrame implements ActionListener {
         }
 
     }
-
     // Clear the mark values
     private void clearMarks() {
         for (JTextField marks : txtMarks) {
             marks.setText("");
         }
     }
-
     // Clear all the text boxes on the top
     private void clearText() {
         txtID.setText("");
@@ -244,7 +220,6 @@ public class StudentFrame extends JFrame implements ActionListener {
         txtProgram.setText("");
         txtLastName.setText("");
     }
-
     // Enables or disables the text boxes
     private void enableTextBoxes(boolean result) {
         txtFirstName.setEnabled(result);
@@ -255,9 +230,8 @@ public class StudentFrame extends JFrame implements ActionListener {
             txt.setEnabled(result);
         }
     }
-
     // Gets the text from the text boxes and sets it in the created student.
-    public void createStudent(){
+    private void createStudent(){
         Student currentStudent = studentList.get(studentList.size() - 1);
         String firstName = txtFirstName.getText();
         String lastName = txtLastName.getText();
@@ -282,9 +256,7 @@ public class StudentFrame extends JFrame implements ActionListener {
         currentStudent.setMarks(studentMarks);
         // Repositions the current index
         currentIndex = studentList.size() - 1;
-        //update();
     }
-
     // Event Handlers for the buttons
     public void actionPerformed(ActionEvent e) {
         // When Next Button is clicked, it increases the index by 1 and loads that student.
@@ -316,9 +288,8 @@ public class StudentFrame extends JFrame implements ActionListener {
             }
         }
     }
-
     // Loads the current student into the text boxes
-    public void loadStudent(Student student) {
+    private void loadStudent(Student student) {
         txtID.setText(student.getStudentID());
         txtProgram.setText(student.getProgram());
         txtFirstName.setText(student.getFname());
