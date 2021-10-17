@@ -257,6 +257,28 @@ public class StudentFrame extends JFrame implements ActionListener {
         // Repositions the current index
         currentIndex = studentList.size() - 1;
     }
+
+    // Loads the current student into the text boxes
+    private void loadStudent(Student student) {
+        txtID.setText(student.getStudentID());
+        txtProgram.setText(student.getProgram());
+        txtFirstName.setText(student.getFname());
+        txtLastName.setText(student.getLname());
+        // Counter for the list of marks
+        int i = 0;
+        // Set each mark text box
+        for (double mark : student.getMarks()){
+            txtMarks[i].setText(String.valueOf(mark));
+            ++i;
+        }
+        if (DEBUGMODE){
+            double[] marks = student.getMarks(); // DEBUG
+            System.out.printf("LOADING STUDENT: %s %s %s %s\n", student.getStudentID(), student.getFname(), student.getLname(), student.getProgram()); // DEBUG
+            System.out.printf("GRADES: %2f %2f %2f %2f %2f %2f", marks[0], marks[1], marks[2], marks[3], marks[4], marks[5]); // DEBUG
+        }
+        update();
+    }
+
     // Event Handlers for the buttons
     public void actionPerformed(ActionEvent e) {
         // When Next Button is clicked, it increases the index by 1 and loads that student.
@@ -287,25 +309,5 @@ public class StudentFrame extends JFrame implements ActionListener {
                 System.out.println("Out of range");
             }
         }
-    }
-    // Loads the current student into the text boxes
-    private void loadStudent(Student student) {
-        txtID.setText(student.getStudentID());
-        txtProgram.setText(student.getProgram());
-        txtFirstName.setText(student.getFname());
-        txtLastName.setText(student.getLname());
-        // Counter for the list of marks
-        int i = 0;
-        // Set each mark text box
-        for (double mark : student.getMarks()){
-            txtMarks[i].setText(String.valueOf(mark));
-            ++i;
-        }
-        if (DEBUGMODE){
-            double[] marks = student.getMarks(); // DEBUG
-            System.out.printf("LOADING STUDENT: %s %s %s %s\n", student.getStudentID(), student.getFname(), student.getLname(), student.getProgram()); // DEBUG
-            System.out.printf("GRADES: %2f %2f %2f %2f %2f %2f", marks[0], marks[1], marks[2], marks[3], marks[4], marks[5]); // DEBUG
-        }
-        update();
     }
 } // END CLASS
