@@ -151,6 +151,7 @@ public class StudentFrame extends JFrame implements ActionListener {
                     btnEdit.setText("Edit");
                     btnAdd.setEnabled(true);
                     btnLoad.setEnabled(true);
+                    btnSave.setEnabled(true);
                     btnNext.setEnabled(false);
                     currentState = State.RUNNING;
                     enableTextBoxes(false);
@@ -174,15 +175,18 @@ public class StudentFrame extends JFrame implements ActionListener {
                     btnAdd.setEnabled(true);
                     btnLoad.setEnabled(true);
                     btnNext.setEnabled(false);
+                    btnSave.setEnabled(true);
                     currentState = State.RUNNING;
                 }
             }
-            update();
+//            update(); // Don't think I need update here. Screws with Next Button
         });
 
         // Add the other action listeners
         btnPrev.addActionListener(this);
         btnNext.addActionListener(this);
+        btnSave.addActionListener(this);
+        btnLoad.addActionListener(this);
     } // End Constructor
 
     // Generate all the components of the frame
@@ -350,6 +354,16 @@ public class StudentFrame extends JFrame implements ActionListener {
         update();
     }
 
+    // Saves the current list to file
+    public void saveStudentsToFile(){
+        System.out.println("Save students to File");
+    }
+
+    // Loads the file -> Start at index 0
+    public void loadStudentFile(){
+        System.out.println("Load students from file");
+    }
+
     // Event Handlers for the buttons
     public void actionPerformed(ActionEvent e) {
 
@@ -385,6 +399,23 @@ public class StudentFrame extends JFrame implements ActionListener {
             } else {
                 System.out.println("Out of range");
             }
-        }
-    }
+        } // END OF NEXT BUTTON
+
+        ///////////////////////////////////////////////////////////////////////
+        // SAVE BUTTON EVENT
+        // When you click the save button, every record from [0] - [length] are saved
+        // into a file
+        if (e.getSource() == btnSave){
+            saveStudentsToFile();
+        } // END OF SAVE BUTTON
+
+        ///////////////////////////////////////////////////////////////////////
+        // LOAD BUTTON EVENT
+        // When the load button is clicked, load everything from the file
+        if (e.getSource() == btnLoad){
+            loadStudentFile();
+        } // END OF LOAD BUTTON
+
+    } // END OF EVENTS
+
 } // END CLASS
