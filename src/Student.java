@@ -1,9 +1,13 @@
+import java.io.Serial;
+import java.io.Serializable;
+
 /**
  * Student - a data class to be used in Assignment01
  * @author <a href="mailto:James.Ronholm@CanadoreCollege.ca">James Ronholm</a>
  * @version Oct 4, 2020
  */
-public class Student {
+
+public class Student implements Serializable {
     private static int nextNum = 0;
     private final static String numPrefix = "A";
     private String fname, lname, program;

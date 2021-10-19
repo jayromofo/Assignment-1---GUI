@@ -7,7 +7,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class StudentFrame extends JFrame implements ActionListener {
 
@@ -357,11 +359,23 @@ public class StudentFrame extends JFrame implements ActionListener {
     // Saves the current list to file
     public void saveStudentsToFile(){
         System.out.println("Save students to File");
+        // Use the JFileChooser to allow user to choose filename
+
+        // Save the object list to a file
+
     }
 
     // Loads the file -> Start at index 0
     public void loadStudentFile(){
         System.out.println("Load students from file");
+        // Open JFileChooser to load a specific file
+
+        // Open the file
+
+        // Import records and replace any existing records
+
+        // Start at index 0?
+
     }
 
     // Event Handlers for the buttons
@@ -419,3 +433,6 @@ public class StudentFrame extends JFrame implements ActionListener {
     } // END OF EVENTS
 
 } // END CLASS
+
+// TODO: Cannot save or load white adding or editing
+// TODO: Cannot save records if there are no records
