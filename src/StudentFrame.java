@@ -348,6 +348,7 @@ public class StudentFrame extends JFrame implements ActionListener {
         txtLastName.setText(student.getLname());
         // Counter for the list of marks
         int i = 0;
+        int x = 0;
         // Set each mark text box
         for (double mark : student.getMarks()){
             txtMarks[i].setText(String.valueOf(mark));
