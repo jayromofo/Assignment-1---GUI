@@ -9,7 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Collections;
+
 
 public class StudentFrame extends JFrame implements ActionListener {
 
@@ -115,6 +115,7 @@ public class StudentFrame extends JFrame implements ActionListener {
                 btnPrev.setEnabled(false);
                 btnSave.setEnabled(false);
                 btnNext.setEnabled(false);
+                btnAdd.setEnabled(false);
             } else if (currentState == State.EDIT && isEditing == true){
                 try {
                     // Make replacement student
@@ -143,8 +144,10 @@ public class StudentFrame extends JFrame implements ActionListener {
                         // Replace the student in the list with the new one
                         studentList.set(currentIndex, currentStudent);
                         update();
+
                         // Turn off editing mode
                         isEditing = false;
+
                     }
 
                 } catch (Exception ex) {
@@ -154,9 +157,11 @@ public class StudentFrame extends JFrame implements ActionListener {
                     btnAdd.setEnabled(true);
                     btnLoad.setEnabled(true);
                     btnSave.setEnabled(true);
-                    btnNext.setEnabled(false);
+                    btnNext.setEnabled(true);
+                    btnPrev.setEnabled(true);
                     currentState = State.RUNNING;
                     enableTextBoxes(false);
+                    update();
                 }
                 // If current state is on CREATE when edit button is pressed
             } else if (currentState == State.CREATE){
@@ -360,6 +365,15 @@ public class StudentFrame extends JFrame implements ActionListener {
     public void saveStudentsToFile(){
         System.out.println("Save students to File");
         // Use the JFileChooser to allow user to choose filename
+        try (ObjectOutputStream out = new ObjectOutputStream(
+                new FileOutputStream("./AccountObject.bin"))) {
+
+            // Write the whole ArrayList as an object
+            out.writeObject(studentList);
+
+        } catch (SecurityException | IOException ex) {
+            ex.getStackTrace();
+        }
 
         // Save the object list to a file
 
@@ -372,6 +386,38 @@ public class StudentFrame extends JFrame implements ActionListener {
 
         // Open the file
 
+        try (ObjectInputStream in = new ObjectInputStream(
+                new FileInputStream("./AccountObject.bin"))) {
+            ArrayList<Student> student = (ArrayList<Student>) in.readObject();
+
+            if (DEBUGMODE){
+                for (int i = 0; i < student.size(); i++){
+                    System.out.printf("%s %s %s %s%n",
+                            student.get(i).getStudentID(),
+                            student.get(i).getFname(),
+                            student.get(i).getLname(),
+                            student.get(i).getProgram());
+                }
+            System.out.println(studentList.size());
+                for (int i = 0; i < studentList.size(); i++){
+                    System.out.printf("%s %s %s %s%n",
+                            studentList.get(i).getStudentID(),
+                            studentList.get(i).getFname(),
+                            studentList.get(i).getLname(),
+                            studentList.get(i).getProgram());
+                }
+
+            }
+            ArrayList<Student> studentList = new ArrayList<>(student);
+            loadStudent(studentList.get(0));
+            currentIndex = 0;
+            update();
+            btnNext.setEnabled(true);
+
+        }
+        catch (IOException | SecurityException| ClassNotFoundException ex){
+            ex.getStackTrace();
+        }
         // Import records and replace any existing records
 
         // Start at index 0?
