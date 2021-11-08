@@ -148,5 +148,9 @@ public class Student implements Serializable {
             super(msg);
         }
     }
+
+    public static void setNextNum(int index){
+        nextNum = index + 1;
+    }
     
 }
