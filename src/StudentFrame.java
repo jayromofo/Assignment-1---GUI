@@ -7,7 +7,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.*;
 import java.util.ArrayList;
+
 
 public class StudentFrame extends JFrame implements ActionListener {
 
@@ -113,6 +115,7 @@ public class StudentFrame extends JFrame implements ActionListener {
                 btnPrev.setEnabled(false);
                 btnSave.setEnabled(false);
                 btnNext.setEnabled(false);
+                btnAdd.setEnabled(false);
             } else if (currentState == State.EDIT && isEditing == true){
                 try {
                     // Make replacement student
@@ -141,8 +144,10 @@ public class StudentFrame extends JFrame implements ActionListener {
                         // Replace the student in the list with the new one
                         studentList.set(currentIndex, currentStudent);
                         update();
+
                         // Turn off editing mode
                         isEditing = false;
+
                     }
 
                 } catch (Exception ex) {
@@ -151,9 +156,12 @@ public class StudentFrame extends JFrame implements ActionListener {
                     btnEdit.setText("Edit");
                     btnAdd.setEnabled(true);
                     btnLoad.setEnabled(true);
-                    btnNext.setEnabled(false);
+                    btnSave.setEnabled(true);
+                    btnNext.setEnabled(true);
+                    btnPrev.setEnabled(true);
                     currentState = State.RUNNING;
                     enableTextBoxes(false);
+                    update();
                 }
                 // If current state is on CREATE when edit button is pressed
             } else if (currentState == State.CREATE){
@@ -174,15 +182,18 @@ public class StudentFrame extends JFrame implements ActionListener {
                     btnAdd.setEnabled(true);
                     btnLoad.setEnabled(true);
                     btnNext.setEnabled(false);
+                    btnSave.setEnabled(true);
                     currentState = State.RUNNING;
                 }
             }
-            update();
+//            update(); // Don't think I need update here. Screws with Next Button
         });
 
         // Add the other action listeners
         btnPrev.addActionListener(this);
         btnNext.addActionListener(this);
+        btnSave.addActionListener(this);
+        btnLoad.addActionListener(this);
     } // End Constructor
 
     // Generate all the components of the frame
@@ -337,6 +348,7 @@ public class StudentFrame extends JFrame implements ActionListener {
         txtLastName.setText(student.getLname());
         // Counter for the list of marks
         int i = 0;
+        int x = 0;
         // Set each mark text box
         for (double mark : student.getMarks()){
             txtMarks[i].setText(String.valueOf(mark));
@@ -348,6 +360,69 @@ public class StudentFrame extends JFrame implements ActionListener {
             System.out.printf("GRADES: %2f %2f %2f %2f %2f %2f", marks[0], marks[1], marks[2], marks[3], marks[4], marks[5]); // DEBUG
         }
         update();
+    }
+
+    // Saves the current list to file
+    public void saveStudentsToFile(){
+        System.out.println("Save students to File");
+        // Use the JFileChooser to allow user to choose filename
+        try (ObjectOutputStream out = new ObjectOutputStream(
+                new FileOutputStream("./AccountObject.bin"))) {
+
+            // Write the whole ArrayList as an object
+            out.writeObject(studentList);
+
+        } catch (SecurityException | IOException ex) {
+            ex.getStackTrace();
+        }
+
+        // Save the object list to a file
+
+    }
+
+    // Loads the file -> Start at index 0
+    public void loadStudentFile(){
+        System.out.println("Load students from file");
+        // Open JFileChooser to load a specific file
+
+        // Open the file
+
+        try (ObjectInputStream in = new ObjectInputStream(
+                new FileInputStream("./AccountObject.bin"))) {
+            ArrayList<Student> student = (ArrayList<Student>) in.readObject();
+
+            if (DEBUGMODE){
+                for (int i = 0; i < student.size(); i++){
+                    System.out.printf("%s %s %s %s%n",
+                            student.get(i).getStudentID(),
+                            student.get(i).getFname(),
+                            student.get(i).getLname(),
+                            student.get(i).getProgram());
+                }
+            System.out.println(studentList.size());
+                for (int i = 0; i < studentList.size(); i++){
+                    System.out.printf("%s %s %s %s%n",
+                            studentList.get(i).getStudentID(),
+                            studentList.get(i).getFname(),
+                            studentList.get(i).getLname(),
+                            studentList.get(i).getProgram());
+                }
+
+            }
+            ArrayList<Student> studentList = new ArrayList<>(student);
+            loadStudent(studentList.get(0));
+            currentIndex = 0;
+            update();
+            btnNext.setEnabled(true);
+
+        }
+        catch (IOException | SecurityException| ClassNotFoundException ex){
+            ex.getStackTrace();
+        }
+        // Import records and replace any existing records
+
+        // Start at index 0?
+
     }
 
     // Event Handlers for the buttons
@@ -385,6 +460,26 @@ public class StudentFrame extends JFrame implements ActionListener {
             } else {
                 System.out.println("Out of range");
             }
-        }
-    }
+        } // END OF NEXT BUTTON
+
+        ///////////////////////////////////////////////////////////////////////
+        // SAVE BUTTON EVENT
+        // When you click the save button, every record from [0] - [length] are saved
+        // into a file
+        if (e.getSource() == btnSave){
+            saveStudentsToFile();
+        } // END OF SAVE BUTTON
+
+        ///////////////////////////////////////////////////////////////////////
+        // LOAD BUTTON EVENT
+        // When the load button is clicked, load everything from the file
+        if (e.getSource() == btnLoad){
+            loadStudentFile();
+        } // END OF LOAD BUTTON
+
+    } // END OF EVENTS
+
 } // END CLASS
+
+// TODO: Cannot save or load white adding or editing
+// TODO: Cannot save records if there are no records
