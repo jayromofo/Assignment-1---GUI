@@ -7,7 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.*;
+import java.sql.*;
 import java.util.ArrayList;
 
 
@@ -50,154 +50,191 @@ public class StudentFrame extends JFrame implements ActionListener {
 
     // Helper Variables
     private static final JFileChooser fc = new JFileChooser();
-    private static ArrayList<Student> studentList = new ArrayList<>();
+    private static ArrayList<Student> beforeStudentList = new ArrayList<>();
+    private static ArrayList<Student> afterStudentList = new ArrayList<>();
     private static int currentIndex = 0;
-    private final static boolean DEBUGMODE = true;  // Turns on/off debug mode
+    private final static boolean DEBUGMODE = false;  // Turns on/off debug mode
     private static State currentState;
     static boolean isEditing = false;
+
+    // Database Variables
+    private Connection connection;
+    private Statement statement;
+    private ResultSet resultSet;
+    private ResultSetMetaData meta;
+    private String connectionString;
+    private String username;
+    private String password;
+    private String insertQuery;
+    private String updateQuery;
+    private String selectQuery;
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // FUNCTIONS
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Constructor for the Student Frame
-    public StudentFrame(String name){
+    public StudentFrame(String name) {
         super(name);
         currentState = State.RUNNING;
         // Generate fields
         generateFields();
         // Startup state for text boxes and buttons
         setInitialState();
-        ///////////////////////////////////////////////////////////
-        // ACTION LISTENERS
-        ///////////////////////////////////////////////////////////
 
-        // Add Button Event
-        btnAdd.addActionListener(e -> {
-                    // Clear all information
-                    if (currentState == State.RUNNING) {
-                        currentState = State.CREATE;
-                        update();
-                        clearText();
-                        clearMarks();
-                        // Create new student and add to the list
-                        Student newStudent = new Student();
-                        studentList.add(newStudent);
-                        if (DEBUGMODE) {
-                            System.out.println("Student Added to List"); // DEBUG to make sure button is being called
-                        }
-                        currentIndex = newStudent.getNextNum() - 1;
-                        // Put the current student ID in text field
-                        String id = newStudent.getStudentID();
-                        btnEdit.setEnabled(true);
-                        btnEdit.setText("Done");
-                        btnAdd.setEnabled(false);
-                        // Disable other buttons
-                        btnLoad.setEnabled(false);
-                        btnPrev.setEnabled(false);
-                        btnSave.setEnabled(false);
-                        btnNext.setEnabled(false);
-                        // Enable text boxes for input
-                        enableTextBoxes(true);
-                        // Setup next student number to be used
-                        txtID.setText(id);
-                    }
-                });
+        try {
+            selectQuery = "SELECT * FROM assignment.students";
+            connectionString = "jdbc:postgresql://localhost:5432/javaclass";
+            username = "postgres";
+            password = "admin";
+            connection = DriverManager.getConnection(connectionString, username, password);
+            statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            resultSet = statement.executeQuery(selectQuery);
+            meta = resultSet.getMetaData();
 
-        // Using the event button inside the Add button
-
-
-
-        btnEdit.addActionListener(e -> {
-            // If in default state
-            if (currentState == State.RUNNING) {
-                currentState = State.EDIT;
-                // Turn editing mode on
-                isEditing = true;
-                enableTextBoxes(true);
-                btnEdit.setText("Done");
-                btnLoad.setEnabled(false);
-                btnPrev.setEnabled(false);
-                btnSave.setEnabled(false);
-                btnNext.setEnabled(false);
-                btnAdd.setEnabled(false);
-            } else if (currentState == State.EDIT && isEditing == true){
-                try {
-                    // Make replacement student
-                    Student currentStudent = studentList.get(currentIndex);
-                    String firstName = txtFirstName.getText();
-                    String lastName = txtLastName.getText();
-                    String program = txtProgram.getText();
-                    double[] studentMarks = new double[6];
-
-                    int markIndex = 0;
-                    for (JTextField mk : txtMarks) {
-                        // If no marks are in the text boxes, set them to 0
-                        if (mk.getText().isEmpty()) {
-                            //studentMarks[markIndex] = 0;
-                            mk.setText(String.valueOf(0.0f));
-                        }
-                        // If there are values in the marks then add them to the array
-                        studentMarks[markIndex] = Double.parseDouble(mk.getText());
-                        markIndex++;
-
-                        // Set the values on the student
-                        currentStudent.setFname(firstName);
-                        currentStudent.setLname(lastName);
-                        currentStudent.setProgram(program);
-                        currentStudent.setMarks(studentMarks);
-                        // Replace the student in the list with the new one
-                        studentList.set(currentIndex, currentStudent);
-                        update();
-
-                        // Turn off editing mode
-                        isEditing = false;
-
-                    }
-
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                } finally {
-                    // Enable the appropriate buttons
-                    btnEdit.setText("Edit");
-                    btnAdd.setEnabled(true);
-                    btnLoad.setEnabled(true);
-                    btnSave.setEnabled(true);
-                    btnNext.setEnabled(true);
-                    btnPrev.setEnabled(true);
-                    currentState = State.RUNNING;
-                    enableTextBoxes(false);
-                    update();
-                }
-                // If current state is on CREATE when edit button is pressed
-            } else if (currentState == State.CREATE){
-                try
-                {
-                    createStudent();
-                    enableTextBoxes(false);
-                    if (DEBUGMODE){
-                        System.out.println(currentIndex); // DEBUG
-                    }
-                    update();
-                }
-                catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-                finally {
-                    btnEdit.setText("Edit");
-                    btnAdd.setEnabled(true);
-                    btnLoad.setEnabled(true);
-                    btnNext.setEnabled(false);
-                    btnSave.setEnabled(true);
-                    currentState = State.RUNNING;
-                }
+            while (resultSet.next()){
+                String student_id = resultSet.getString("student_id");
+                String first_name = resultSet.getString("first_name");
+                String last_name = resultSet.getString("last_name");
+                String program = resultSet.getString("program");
+                Student newStudent = new Student();
+                newStudent.setStudentID(student_id);
+                newStudent.setFname(first_name);
+                newStudent.setLname(last_name);
+                newStudent.setProgram(program);
+                beforeStudentList.add(newStudent);
             }
-        });
-        // Add the other action listeners
-        btnPrev.addActionListener(this);
-        btnNext.addActionListener(this);
-        btnSave.addActionListener(this);
-        btnLoad.addActionListener(this);
-    } // End Constructor
+            ///////////////////////////////////////////////////////////
+            // ACTION LISTENERS
+            ///////////////////////////////////////////////////////////
+
+            // Add Button Event
+            btnAdd.addActionListener(e -> {
+                // Clear all information
+                if (currentState == State.RUNNING) {
+                    currentState = State.CREATE;
+                    update();
+                    clearText();
+                    clearMarks();
+                    // Create new student and add to the list
+                    Student newStudent = new Student();
+                    beforeStudentList.add(newStudent);
+                    if (DEBUGMODE) {
+                        System.out.println("Student Added to List"); // DEBUG to make sure button is being called
+                    }
+                    currentIndex = newStudent.getNextNum() - 1;
+                    // Put the current student ID in text field
+                    String id = newStudent.getStudentID();
+                    btnEdit.setEnabled(true);
+                    btnEdit.setText("Done");
+                    btnAdd.setEnabled(false);
+                    // Disable other buttons
+                    btnLoad.setEnabled(false);
+                    btnPrev.setEnabled(false);
+                    btnSave.setEnabled(false);
+                    btnNext.setEnabled(false);
+                    // Enable text boxes for input
+                    enableTextBoxes(true);
+                    // Setup next student number to be used
+                    txtID.setText(id);
+                }
+            });
+
+            // Using the event button inside the Add button
+
+
+            btnEdit.addActionListener(e -> {
+                // If in default state
+                if (currentState == State.RUNNING) {
+                    currentState = State.EDIT;
+                    // Turn editing mode on
+                    isEditing = true;
+                    enableTextBoxes(true);
+                    btnEdit.setText("Done");
+                    btnLoad.setEnabled(false);
+                    btnPrev.setEnabled(false);
+                    btnSave.setEnabled(false);
+                    btnNext.setEnabled(false);
+                    btnAdd.setEnabled(false);
+                } else if (currentState == State.EDIT && isEditing == true) {
+                    try {
+                        // Make replacement student
+                        Student currentStudent = beforeStudentList.get(currentIndex);
+                        String firstName = txtFirstName.getText();
+                        String lastName = txtLastName.getText();
+                        String program = txtProgram.getText();
+                        double[] studentMarks = new double[6];
+
+                        int markIndex = 0;
+                        for (JTextField mk : txtMarks) {
+                            // If no marks are in the text boxes, set them to 0
+                            if (mk.getText().isEmpty()) {
+                                //studentMarks[markIndex] = 0;
+                                mk.setText(String.valueOf(0.0f));
+                            }
+                            // If there are values in the marks then add them to the array
+                            studentMarks[markIndex] = Double.parseDouble(mk.getText());
+                            markIndex++;
+
+                            // Set the values on the student
+                            currentStudent.setFname(firstName);
+                            currentStudent.setLname(lastName);
+                            currentStudent.setProgram(program);
+                            currentStudent.setMarks(studentMarks);
+                            // Replace the student in the list with the new one
+                            beforeStudentList.set(currentIndex, currentStudent);
+                            update();
+
+                            // Turn off editing mode
+                            isEditing = false;
+
+                        }
+
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    } finally {
+                        // Enable the appropriate buttons
+                        btnEdit.setText("Edit");
+                        btnAdd.setEnabled(true);
+                        btnLoad.setEnabled(true);
+                        btnSave.setEnabled(true);
+                        btnNext.setEnabled(true);
+                        btnPrev.setEnabled(true);
+                        currentState = State.RUNNING;
+                        enableTextBoxes(false);
+                        update();
+                    }
+                    // If current state is on CREATE when edit button is pressed
+                } else if (currentState == State.CREATE) {
+                    try {
+                        createStudent();
+                        enableTextBoxes(false);
+                        if (DEBUGMODE) {
+                            System.out.println(currentIndex); // DEBUG
+                        }
+                        update();
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    } finally {
+                        btnEdit.setText("Edit");
+                        btnAdd.setEnabled(true);
+                        btnLoad.setEnabled(true);
+                        btnNext.setEnabled(false);
+                        btnSave.setEnabled(true);
+                        currentState = State.RUNNING;
+                    }
+                }
+            });
+            // Add the other action listeners
+            btnPrev.addActionListener(this);
+            btnNext.addActionListener(this);
+            btnSave.addActionListener(this);
+            btnLoad.addActionListener(this);
+        } catch (SQLException ex) {
+            // End Constructor
+            ex.printStackTrace();
+        }
+    }
 
     // Generate all the components of the frame
     private void generateFields() {
@@ -264,9 +301,9 @@ public class StudentFrame extends JFrame implements ActionListener {
     // Update all the information to get the button states
     // Use this after each event to keep it up to date
     private void update() {
-        int length = studentList.size();
+        int length = beforeStudentList.size();
         if (DEBUGMODE){
-            System.out.println("From Update\nIndex: "+currentIndex +"\tList Length: "+ studentList.size()); // DEBUG
+            System.out.println("From Update\nIndex: "+currentIndex +"\tList Length: "+ beforeStudentList.size()); // DEBUG
             System.out.println("Current State: "+ currentState);
         }
         try
@@ -277,14 +314,14 @@ public class StudentFrame extends JFrame implements ActionListener {
                 System.out.println("Index: "+currentIndex +"\tList - 1: "+ (length - 1)); // DEBUG
             }
             // If StudentList is empty buttons are disabled START STATE
-            if (studentList.isEmpty()) {
+            if (beforeStudentList.isEmpty()) {
                 btnPrev.setEnabled(false);
                 btnNext.setEnabled(false);
             }
             // If index is 0 prev disabled
             if (currentIndex == 0) {
                 btnPrev.setEnabled(false);
-            }  else if (currentIndex == (length - 1) || studentList.size() == 1){
+            }  else if (currentIndex == (length - 1) || beforeStudentList.size() == 1){
                 btnNext.setEnabled(false);
             }
         }
@@ -321,7 +358,7 @@ public class StudentFrame extends JFrame implements ActionListener {
 
     // Gets the text from the text boxes and sets it in the created student.
     private void createStudent(){
-        Student currentStudent = studentList.get(studentList.size() - 1);
+        Student currentStudent = beforeStudentList.get(beforeStudentList.size() - 1);
         String firstName = txtFirstName.getText();
         String lastName = txtLastName.getText();
         String program = txtProgram.getText();
@@ -344,7 +381,7 @@ public class StudentFrame extends JFrame implements ActionListener {
         currentStudent.setProgram(program);
         currentStudent.setMarks(studentMarks);
         // Repositions the current index
-        currentIndex = studentList.size() - 1;
+        currentIndex = beforeStudentList.size() - 1;
     }
 
     // Loads the current student into the text boxes
@@ -368,86 +405,8 @@ public class StudentFrame extends JFrame implements ActionListener {
         update();
     }
 
-    // Saves the current list to file
-    public void saveStudentsToFile(){
-        // Initialize file name
-        File fileName = null;
-        System.out.println("Save students to File");
-        fc.setDialogTitle("Save to file");
-        int result = fc.showSaveDialog(null);
-        // If file is valid then it sets the filename
-        if (result == JFileChooser.APPROVE_OPTION){
-            fileName = fc.getSelectedFile();
-        } else {
-            System.out.println("Sorry incorrect file");
-        }
-        try (ObjectOutputStream out = new ObjectOutputStream(
-                new FileOutputStream(fileName))) {
-            // Write the whole ArrayList as an object
-            out.writeObject(studentList);
-        } catch (SecurityException | IOException ex) {
-            ex.getStackTrace();
-        }
-    }
+    public void addFromDatabase() {
 
-    // Loads the file
-    public void loadStudentFile(){
-        if (DEBUGMODE){
-            System.out.println("Load students from file");
-        }
-        // Initialize the file
-        File fileName = null;
-        // Open JFileChooser to load a specific file
-        fc.setDialogTitle("Load file");
-        int result = fc.showOpenDialog(null);
-        // If filename is valid then sets the filename
-        if (result == JFileChooser.APPROVE_OPTION){
-            fileName = fc.getSelectedFile();
-        } else {
-            System.out.println("Sorry invalid file name");
-        }
-        // Open the file into an array
-        try (ObjectInputStream in = new ObjectInputStream(
-                new FileInputStream(fileName))) {
-            ArrayList<Student> student = (ArrayList<Student>) in.readObject();
-
-            if (DEBUGMODE){
-                for (int i = 0; i < student.size(); i++){
-                    System.out.printf("%s %s %s %s%n",
-                            student.get(i).getStudentID(),
-                            student.get(i).getFname(),
-                            student.get(i).getLname(),
-                            student.get(i).getProgram());
-                }
-            System.out.println(studentList.size());
-                for (int i = 0; i < studentList.size(); i++){
-                    System.out.printf("%s %s %s %s%n",
-                            studentList.get(i).getStudentID(),
-                            studentList.get(i).getFname(),
-                            studentList.get(i).getLname(),
-                            studentList.get(i).getProgram());
-                }
-
-            }
-            // Copy/Clone list into the student list
-            studentList = (ArrayList<Student>) student.clone();
-            // Load the first student
-            loadStudent(studentList.get(0));
-            // Set the next num for adding
-            Student.setNextNum(studentList.size() - 1);
-            // Enable buttons
-            btnNext.setEnabled(true);
-            btnAdd.setEnabled(true);
-            btnEdit.setEnabled(true);
-            update();
-
-        }
-        catch (IOException | SecurityException| ClassNotFoundException | NullPointerException ex){
-            ex.getStackTrace();
-        }
-        // Set index to 0
-        currentIndex = 0;
-        update();
     }
 
     // Event Handlers for the buttons
@@ -461,7 +420,7 @@ public class StudentFrame extends JFrame implements ActionListener {
             update();
             if (currentIndex > 0) {
                 currentIndex -= 1;
-                loadStudent(studentList.get(currentIndex));
+                loadStudent(beforeStudentList.get(currentIndex));
                 if (DEBUGMODE){
                     System.out.println("Current Index: "+ currentIndex);
                     System.out.println("Next index from Prev is: "+ currentIndex);
@@ -475,9 +434,9 @@ public class StudentFrame extends JFrame implements ActionListener {
         // When Next Button is clicked, it increases the index by 1 and loads that student.
         if (e.getSource() == btnNext) {
             update();
-            if (currentIndex < studentList.size() - 1){
+            if (currentIndex < beforeStudentList.size() - 1){
                 currentIndex += 1;
-                loadStudent(studentList.get(currentIndex));
+                loadStudent(beforeStudentList.get(currentIndex));
                 if (DEBUGMODE){
                     System.out.println("Current Index: "+ currentIndex); // DEBUG
                     System.out.println("Next index from Next is: "+ currentIndex); // DEBUG
@@ -487,17 +446,6 @@ public class StudentFrame extends JFrame implements ActionListener {
             }
         } // END OF NEXT BUTTON
 
-        ///////////////////////////////////////////////////////////////////////
-        // SAVE BUTTON EVENT
-        if (e.getSource() == btnSave){
-            saveStudentsToFile();
-        } // END OF SAVE BUTTON
-
-        ///////////////////////////////////////////////////////////////////////
-        // LOAD BUTTON EVENT
-        if (e.getSource() == btnLoad){
-            loadStudentFile();
-        } // END OF LOAD BUTTON
     } // END OF EVENTS
 } // END CLASS
 
