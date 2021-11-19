@@ -58,16 +58,18 @@ public class StudentFrame extends JFrame implements ActionListener {
     static boolean isEditing = false;
 
     // Database Variables
-    private Connection connection;
-    private Statement statement;
-    private ResultSet resultSet;
-    private ResultSetMetaData meta;
-    private String connectionString;
-    private String username;
-    private String password;
-    private String insertQuery;
-    private String updateQuery;
-    private String selectQuery;
+    private static Connection connection;
+    private static Statement statement;
+    private static ResultSet resultSet;
+    private static ResultSet markResults;
+    private static ResultSetMetaData meta;
+    private static String connectionString = "jdbc:postgresql://localhost:5432/javaclass";
+    private static String username = "postgres";
+    private static String password = "admin";
+    private static PreparedStatement insertQuery;
+    private static PreparedStatement updateQuery;
+    private static String selectQuery;
+    private static String selectMarksQuery;
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,27 +85,13 @@ public class StudentFrame extends JFrame implements ActionListener {
         setInitialState();
 
         try {
-            selectQuery = "SELECT * FROM assignment.students";
-            connectionString = "jdbc:postgresql://localhost:5432/javaclass";
-            username = "postgres";
-            password = "admin";
-            connection = DriverManager.getConnection(connectionString, username, password);
-            statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-            resultSet = statement.executeQuery(selectQuery);
-            meta = resultSet.getMetaData();
-
-            while (resultSet.next()){
-                String student_id = resultSet.getString("student_id");
-                String first_name = resultSet.getString("first_name");
-                String last_name = resultSet.getString("last_name");
-                String program = resultSet.getString("program");
-                Student newStudent = new Student();
-                newStudent.setStudentID(student_id);
-                newStudent.setFname(first_name);
-                newStudent.setLname(last_name);
-                newStudent.setProgram(program);
-                beforeStudentList.add(newStudent);
+            beforeStudentList = addFromDatabase();
+            for (var student : beforeStudentList){
+                System.out.println(student.getFname());
             }
+            afterStudentList = (ArrayList<Student>) beforeStudentList.clone();
+            btnEdit.setEnabled(true);
+
             ///////////////////////////////////////////////////////////
             // ACTION LISTENERS
             ///////////////////////////////////////////////////////////
@@ -118,7 +106,7 @@ public class StudentFrame extends JFrame implements ActionListener {
                     clearMarks();
                     // Create new student and add to the list
                     Student newStudent = new Student();
-                    beforeStudentList.add(newStudent);
+                    afterStudentList.add(newStudent);
                     if (DEBUGMODE) {
                         System.out.println("Student Added to List"); // DEBUG to make sure button is being called
                     }
@@ -182,7 +170,7 @@ public class StudentFrame extends JFrame implements ActionListener {
                             currentStudent.setProgram(program);
                             currentStudent.setMarks(studentMarks);
                             // Replace the student in the list with the new one
-                            beforeStudentList.set(currentIndex, currentStudent);
+                            afterStudentList.set(currentIndex, currentStudent);
                             update();
 
                             // Turn off editing mode
@@ -301,7 +289,7 @@ public class StudentFrame extends JFrame implements ActionListener {
     // Update all the information to get the button states
     // Use this after each event to keep it up to date
     private void update() {
-        int length = beforeStudentList.size();
+        int length = afterStudentList.size();
         if (DEBUGMODE){
             System.out.println("From Update\nIndex: "+currentIndex +"\tList Length: "+ beforeStudentList.size()); // DEBUG
             System.out.println("Current State: "+ currentState);
@@ -314,14 +302,14 @@ public class StudentFrame extends JFrame implements ActionListener {
                 System.out.println("Index: "+currentIndex +"\tList - 1: "+ (length - 1)); // DEBUG
             }
             // If StudentList is empty buttons are disabled START STATE
-            if (beforeStudentList.isEmpty()) {
+            if (afterStudentList.isEmpty()) {
                 btnPrev.setEnabled(false);
                 btnNext.setEnabled(false);
             }
             // If index is 0 prev disabled
             if (currentIndex == 0) {
                 btnPrev.setEnabled(false);
-            }  else if (currentIndex == (length - 1) || beforeStudentList.size() == 1){
+            }  else if (currentIndex == (length - 1) || afterStudentList.size() == 1){
                 btnNext.setEnabled(false);
             }
         }
@@ -358,7 +346,7 @@ public class StudentFrame extends JFrame implements ActionListener {
 
     // Gets the text from the text boxes and sets it in the created student.
     private void createStudent(){
-        Student currentStudent = beforeStudentList.get(beforeStudentList.size() - 1);
+        Student currentStudent = afterStudentList.get(afterStudentList.size() - 1);
         String firstName = txtFirstName.getText();
         String lastName = txtLastName.getText();
         String program = txtProgram.getText();
@@ -381,7 +369,7 @@ public class StudentFrame extends JFrame implements ActionListener {
         currentStudent.setProgram(program);
         currentStudent.setMarks(studentMarks);
         // Repositions the current index
-        currentIndex = beforeStudentList.size() - 1;
+        currentIndex = afterStudentList.size() - 1;
     }
 
     // Loads the current student into the text boxes
@@ -405,8 +393,74 @@ public class StudentFrame extends JFrame implements ActionListener {
         update();
     }
 
-    public void addFromDatabase() {
+    // Having issues saving all records to the list.
+    public static ArrayList<Student> addFromDatabase() throws SQLException {
+        ArrayList<Student> studentList = new ArrayList<>();
+        selectQuery = "SELECT * FROM assignment.students";
+        selectMarksQuery = "SELECT * FROM assignment.student_marks";
+        connection = DriverManager.getConnection(connectionString, username, password);
+        statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+        resultSet = statement.executeQuery(selectQuery);
+        markResults = stmt.executeQuery(selectMarksQuery);
 
+        if (!resultSet.next()){
+            System.out.println("Nothing in database");
+        } else {
+            while (resultSet.next() && markResults.next()){
+                double[] marks = new double[6];
+                Student newStudent = new Student();
+                String student_id = resultSet.getString("student_id");
+                String first_name = resultSet.getString("first_name");
+                String last_name = resultSet.getString("last_name");
+                String program = resultSet.getString("program");
+                marks[0] = markResults.getDouble("mark_1");
+                marks[1] = markResults.getDouble("mark_2");
+                marks[2] = markResults.getDouble("mark_3");
+                marks[3] = markResults.getDouble("mark_4");
+                marks[4] = markResults.getDouble("mark_5");
+                marks[5] = markResults.getDouble("mark_6");
+                newStudent.setStudentID(student_id);
+                newStudent.setFname(first_name);
+                newStudent.setLname(last_name);
+                newStudent.setProgram(program);
+                newStudent.setMarks(marks);
+                studentList.add(newStudent);
+            }
+        }
+            return studentList;
+    }
+
+    // Truncates the table in the database and saves the new list into the student table
+    private static void saveToDatabase() throws SQLException {
+        statement.executeUpdate("TRUNCATE TABLE assignment.students, assignment.student_marks");
+        for (var student : afterStudentList){
+            double[] marks = student.getMarks();
+            // Add things to the Student table
+            PreparedStatement stmt = connection.prepareStatement(
+                    "INSERT INTO assignment.students (student_id, first_name, last_name, program) " +
+                    "VALUES (?, ?, ?, ?)");
+
+            stmt.setString(1, student.getStudentID());
+            stmt.setString(2, student.getFname());
+            stmt.setString(3, student.getLname());
+            stmt.setString(4, student.getProgram());
+            stmt.executeUpdate();
+
+            // Add things to the marks table
+            PreparedStatement mkstmt = connection.prepareStatement(
+                    "INSERT INTO assignment.student_marks (mark_1, mark_2, mark_3, mark_4, mark_5, mark_6, id) " +
+                            "VALUES (?,?,?,?,?,?,?)"
+            );
+            int index = 1;
+            for (int i = 0; i < 6; i++){
+                mkstmt.setDouble(index, marks[i]);
+                index++;
+            }
+            mkstmt.setString(7, student.getStudentID());
+            mkstmt.executeUpdate();
+        }
+        connection.close();
     }
 
     // Event Handlers for the buttons
@@ -420,7 +474,7 @@ public class StudentFrame extends JFrame implements ActionListener {
             update();
             if (currentIndex > 0) {
                 currentIndex -= 1;
-                loadStudent(beforeStudentList.get(currentIndex));
+                loadStudent(afterStudentList.get(currentIndex));
                 if (DEBUGMODE){
                     System.out.println("Current Index: "+ currentIndex);
                     System.out.println("Next index from Prev is: "+ currentIndex);
@@ -434,9 +488,9 @@ public class StudentFrame extends JFrame implements ActionListener {
         // When Next Button is clicked, it increases the index by 1 and loads that student.
         if (e.getSource() == btnNext) {
             update();
-            if (currentIndex < beforeStudentList.size() - 1){
+            if (currentIndex < afterStudentList.size() - 1){
                 currentIndex += 1;
-                loadStudent(beforeStudentList.get(currentIndex));
+                loadStudent(afterStudentList.get(currentIndex));
                 if (DEBUGMODE){
                     System.out.println("Current Index: "+ currentIndex); // DEBUG
                     System.out.println("Next index from Next is: "+ currentIndex); // DEBUG
@@ -445,6 +499,19 @@ public class StudentFrame extends JFrame implements ActionListener {
                 System.out.println("Out of range");
             }
         } // END OF NEXT BUTTON
+
+        //////////////////////////////////////////////////////////////////////////////////
+        // SAVE BUTTON EVENT
+        // When save button is clicked, it sends in the afterStudentList to the database
+        if (e.getSource() == btnSave){
+            try
+            {
+                saveToDatabase();
+            } catch (SQLException ex){
+                ex.printStackTrace();
+            }
+
+        }
 
     } // END OF EVENTS
 } // END CLASS
