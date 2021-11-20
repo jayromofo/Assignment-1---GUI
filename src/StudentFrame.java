@@ -49,7 +49,9 @@ public class StudentFrame extends JFrame implements ActionListener {
     private final JTextField[] txtMarks = new JTextField[6];
 
     // Helper Variables
+    // List that holds all the initial students. Remains empty if the database is empty
     private static ArrayList<Student> beforeStudentList = new ArrayList<>();
+    // List that copies the initial list. All the new students and updated students are in this list
     private static ArrayList<Student> afterStudentList = new ArrayList<>();
     private static int currentIndex = 0;
     private final static boolean DEBUGMODE = true;  // Turns on/off debug mode
@@ -67,9 +69,6 @@ public class StudentFrame extends JFrame implements ActionListener {
     private static PreparedStatement preparedStatement;
     private static String selectQuery;
 
-
-
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // FUNCTIONS
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,14 +82,19 @@ public class StudentFrame extends JFrame implements ActionListener {
         setInitialState();
 
         try {
+            int count = 0;
             addFromDatabase();
             for (var student : beforeStudentList){
                 System.out.println(student.getFname());
+                count++;
             }
-            System.out.println(beforeStudentList.size());
-            afterStudentList = (ArrayList<Student>) beforeStudentList.clone();
-            loadStudent(afterStudentList.get(0));
-            btnEdit.setEnabled(true);
+            // If there's items in the list then database loaded
+            if (count != 0){
+                System.out.println(beforeStudentList.size());
+                afterStudentList = (ArrayList<Student>) beforeStudentList.clone();
+                loadStudent(afterStudentList.get(0));
+                btnEdit.setEnabled(true);
+            }
 
             ///////////////////////////////////////////////////////////
             // ACTION LISTENERS
@@ -348,7 +352,7 @@ public class StudentFrame extends JFrame implements ActionListener {
 
     // Gets the text from the text boxes and sets it in the created student.
     private void createStudent(){
-        Student currentStudent = beforeStudentList.get(beforeStudentList.size() - 1);
+        Student currentStudent = afterStudentList.get(afterStudentList.size() - 1);
         String firstName = txtFirstName.getText();
         String lastName = txtLastName.getText();
         String program = txtProgram.getText();
@@ -370,8 +374,10 @@ public class StudentFrame extends JFrame implements ActionListener {
         currentStudent.setLname(lastName);
         currentStudent.setProgram(program);
         currentStudent.setMarks(studentMarks);
+        insertStudentIntoDatabase(currentStudent);
         // Repositions the current index
         currentIndex = afterStudentList.size() - 1;
+
     }
 
     // Loads the current student into the text boxes
@@ -400,7 +406,8 @@ public class StudentFrame extends JFrame implements ActionListener {
     // TODO: Find a way to make it so it doesn't get called if there are no records in the database
     public static void addFromDatabase() throws SQLException {
 
-        selectQuery = "Select * from assignment.students INNER JOIN assignment.student_marks sm on students.student_id = sm.id";
+        selectQuery = "Select * from assignment.students INNER JOIN assignment.student_marks sm on students.student_id = sm.id " +
+                "ORDER BY student_id ASC";
         resultSet = null;
         statement = null;
        try (Connection connection = DriverManager.getConnection(connectionString, username, password)){
@@ -437,6 +444,7 @@ public class StudentFrame extends JFrame implements ActionListener {
             records based on the ID. Maybe I could just make a function that ends up editing the record.
      */
 
+    // When you click the save button it saves the list of students/marks to the database
     private static void saveToDatabase() {
         statement = null;
         try
@@ -478,6 +486,7 @@ public class StudentFrame extends JFrame implements ActionListener {
         }
     }
 
+    // Updates the student and marks insides the database
     public static void updateRowInDatabase(String originalID, Student student) {
         String updateQuery = "UPDATE assignment.students " +
                 "SET student_id = ?, " +
@@ -524,12 +533,55 @@ public class StudentFrame extends JFrame implements ActionListener {
                 preparedStatement.executeUpdate();
             } catch (SQLException ex){
                 ex.printStackTrace();
+                System.out.println("Update Failed");
             }
 
         preparedStatement.close();
         } catch (SQLException ex){
             ex.printStackTrace();
         }
+    }
+
+    // Can probably use this instead of saving the whole list to the database
+    // TODO: See if there are any more options
+    public static void insertStudentIntoDatabase(Student student) {
+        preparedStatement = null;
+        String studentQuery = "INSERT INTO assignment.students (student_id, first_name, last_name, program) " +
+                "VALUES (?, ?, ?, ?)";
+        String marksQuery = "INSERT INTO assignment.student_marks (mark_1, mark_2, mark_3, mark_4, mark_5, mark_6, id) " +
+                "VALUES (?,?,?,?,?,?,?)";
+        try
+        {
+            connection = DriverManager.getConnection(connectionString, username, password);
+            // Insert Student
+            preparedStatement = connection.prepareStatement(studentQuery);
+            preparedStatement.setString(1, student.getStudentID());
+            preparedStatement.setString(2, student.getFname());
+            preparedStatement.setString(3, student.getLname());
+            preparedStatement.setString(4, student.getProgram());
+            preparedStatement.executeUpdate();
+
+            // Insert Marks
+            double[] marks = student.getMarks();
+            preparedStatement = connection.prepareStatement(marksQuery);
+            preparedStatement.setDouble(1, marks[0]);
+            preparedStatement.setDouble(2, marks[1]);
+            preparedStatement.setDouble(3, marks[2]);
+            preparedStatement.setDouble(4, marks[3]);
+            preparedStatement.setDouble(5, marks[4]);
+            preparedStatement.setDouble(6, marks[5]);
+            preparedStatement.setString(7, student.getStudentID());
+            preparedStatement.executeUpdate();
+
+            // Close the connection and statement
+            preparedStatement.close();
+            connection.close();
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            System.out.println("InsertFailed");
+        }
+
 
     }
 
@@ -580,7 +632,6 @@ public class StudentFrame extends JFrame implements ActionListener {
             } catch (Exception ex){
                 ex.printStackTrace();
             }
-
         }
 
     } // END OF EVENTS
