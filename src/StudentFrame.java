@@ -49,7 +49,6 @@ public class StudentFrame extends JFrame implements ActionListener {
     private final JTextField[] txtMarks = new JTextField[6];
 
     // Helper Variables
-    private static final JFileChooser fc = new JFileChooser();
     private static ArrayList<Student> beforeStudentList = new ArrayList<>();
     private static ArrayList<Student> afterStudentList = new ArrayList<>();
     private static int currentIndex = 0;
@@ -149,6 +148,7 @@ public class StudentFrame extends JFrame implements ActionListener {
                     try {
                         // Make replacement student
                         Student currentStudent = beforeStudentList.get(currentIndex);
+                        String originalID = currentStudent.getStudentID();
                         String firstName = txtFirstName.getText();
                         String lastName = txtLastName.getText();
                         String program = txtProgram.getText();
@@ -172,6 +172,7 @@ public class StudentFrame extends JFrame implements ActionListener {
                             currentStudent.setMarks(studentMarks);
                             // Replace the student in the list with the new one
                             afterStudentList.set(currentIndex, currentStudent);
+                            updateRowInDatabase(originalID, currentStudent);
                             update();
 
                             // Turn off editing mode
@@ -475,6 +476,61 @@ public class StudentFrame extends JFrame implements ActionListener {
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public static void updateRowInDatabase(String originalID, Student student) {
+        String updateQuery = "UPDATE assignment.students " +
+                "SET student_id = ?, " +
+                "first_name = ?, " +
+                "last_name = ?, " +
+                "program = ? " +
+                "WHERE student_id = ?";
+        String updateMarkQuery = "UPDATE assignment.student_marks " +
+                "SET mark_1 = ?, " +
+                "mark_2 = ?, " +
+                "mark_3 = ?, " +
+                "mark_4 = ?, " +
+                "mark_5 = ?, " +
+                "mark_6 = ? " +
+                "WHERE id = ?";
+        try
+        {
+            connection = DriverManager.getConnection(connectionString, username, password);
+            // Update the student table
+            try
+            {
+                preparedStatement = connection.prepareStatement(updateQuery);
+                preparedStatement.setString(1, student.getStudentID());
+                preparedStatement.setString(2, student.getFname());
+                preparedStatement.setString(3, student.getLname());
+                preparedStatement.setString(4, student.getProgram());
+                preparedStatement.setString(5, originalID);
+                preparedStatement.executeUpdate();
+            } catch (SQLException ex){
+                ex.printStackTrace();
+            }
+
+            try
+            {
+                double[] theMarks = student.getMarks();
+                preparedStatement = connection.prepareStatement(updateMarkQuery);
+                preparedStatement.setDouble(1, theMarks[0]);
+                preparedStatement.setDouble(2, theMarks[1]);
+                preparedStatement.setDouble(3, theMarks[2]);
+                preparedStatement.setDouble(4, theMarks[3]);
+                preparedStatement.setDouble(5, theMarks[4]);
+                preparedStatement.setDouble(6, theMarks[5]);
+                preparedStatement.setString(7, originalID);
+                preparedStatement.executeUpdate();
+            } catch (SQLException ex){
+                ex.printStackTrace();
+            }
+
+        preparedStatement.close();
+        } catch (SQLException ex){
+            ex.printStackTrace();
+        }
+
     }
 
     // Event Handlers for the buttons
