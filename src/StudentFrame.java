@@ -53,7 +53,7 @@ public class StudentFrame extends JFrame implements ActionListener {
     private static ArrayList<Student> beforeStudentList = new ArrayList<>();
     private static ArrayList<Student> afterStudentList = new ArrayList<>();
     private static int currentIndex = 0;
-    private final static boolean DEBUGMODE = false;  // Turns on/off debug mode
+    private final static boolean DEBUGMODE = true;  // Turns on/off debug mode
     private static State currentState;
     static boolean isEditing = false;
 
@@ -61,15 +61,14 @@ public class StudentFrame extends JFrame implements ActionListener {
     private static Connection connection;
     private static Statement statement;
     private static ResultSet resultSet;
-    private static ResultSet markResults;
     private static ResultSetMetaData meta;
     private static String connectionString = "jdbc:postgresql://localhost:5432/javaclass";
     private static String username = "postgres";
     private static String password = "admin";
-    private static PreparedStatement insertQuery;
-    private static PreparedStatement updateQuery;
+    private static PreparedStatement preparedStatement;
     private static String selectQuery;
-    private static String selectMarksQuery;
+
+
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,11 +84,13 @@ public class StudentFrame extends JFrame implements ActionListener {
         setInitialState();
 
         try {
-            beforeStudentList = addFromDatabase();
+            addFromDatabase();
             for (var student : beforeStudentList){
                 System.out.println(student.getFname());
             }
+            System.out.println(beforeStudentList.size());
             afterStudentList = (ArrayList<Student>) beforeStudentList.clone();
+            loadStudent(afterStudentList.get(0));
             btnEdit.setEnabled(true);
 
             ///////////////////////////////////////////////////////////
@@ -346,7 +347,7 @@ public class StudentFrame extends JFrame implements ActionListener {
 
     // Gets the text from the text boxes and sets it in the created student.
     private void createStudent(){
-        Student currentStudent = afterStudentList.get(afterStudentList.size() - 1);
+        Student currentStudent = beforeStudentList.get(beforeStudentList.size() - 1);
         String firstName = txtFirstName.getText();
         String lastName = txtLastName.getText();
         String program = txtProgram.getText();
@@ -393,74 +394,87 @@ public class StudentFrame extends JFrame implements ActionListener {
         update();
     }
 
-    // Having issues saving all records to the list.
-    public static ArrayList<Student> addFromDatabase() throws SQLException {
-        ArrayList<Student> studentList = new ArrayList<>();
-        selectQuery = "SELECT * FROM assignment.students";
-        selectMarksQuery = "SELECT * FROM assignment.student_marks";
-        connection = DriverManager.getConnection(connectionString, username, password);
-        statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-        Statement stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-        resultSet = statement.executeQuery(selectQuery);
-        markResults = stmt.executeQuery(selectMarksQuery);
+    // When the program starts, this function ends up being called which makes it so it adds all the records from the
+    // database to a list.
+    // TODO: Find a way to make it so it doesn't get called if there are no records in the database
+    public static void addFromDatabase() throws SQLException {
 
-        if (!resultSet.next()){
-            System.out.println("Nothing in database");
-        } else {
-            while (resultSet.next() && markResults.next()){
-                double[] marks = new double[6];
-                Student newStudent = new Student();
-                String student_id = resultSet.getString("student_id");
-                String first_name = resultSet.getString("first_name");
-                String last_name = resultSet.getString("last_name");
-                String program = resultSet.getString("program");
-                marks[0] = markResults.getDouble("mark_1");
-                marks[1] = markResults.getDouble("mark_2");
-                marks[2] = markResults.getDouble("mark_3");
-                marks[3] = markResults.getDouble("mark_4");
-                marks[4] = markResults.getDouble("mark_5");
-                marks[5] = markResults.getDouble("mark_6");
-                newStudent.setStudentID(student_id);
-                newStudent.setFname(first_name);
-                newStudent.setLname(last_name);
-                newStudent.setProgram(program);
-                newStudent.setMarks(marks);
-                studentList.add(newStudent);
-            }
-        }
-            return studentList;
+        selectQuery = "Select * from assignment.students INNER JOIN assignment.student_marks sm on students.student_id = sm.id";
+        resultSet = null;
+        statement = null;
+       try (Connection connection = DriverManager.getConnection(connectionString, username, password)){
+           statement = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
+           resultSet = statement.executeQuery(selectQuery);
+//
+           while (resultSet.next()){
+               double[] marks = new double[6];
+               String student_id = resultSet.getString("student_id");
+               String first_name = resultSet.getString("first_name");
+               String last_name = resultSet.getString("last_name");
+               String program = resultSet.getString("program");
+               marks[0] = resultSet.getDouble("mark_1");
+               marks[1] = resultSet.getDouble("mark_2");
+               marks[2] = resultSet.getDouble("mark_3");
+               marks[3] = resultSet.getDouble("mark_4");
+               marks[4] = resultSet.getDouble("mark_5");
+               marks[5] = resultSet.getDouble("mark_6");
+               if (DEBUGMODE){
+                   System.out.printf("%S %S %S %S \n%f %f %f %f %f %f\n\n", student_id, first_name, last_name, program,
+                           marks[0], marks[1], marks[2], marks[3], marks[4], marks[5]);
+
+               }
+               Student newStudent = new Student(first_name, last_name, program, marks);
+               newStudent.setStudentID(student_id);
+               beforeStudentList.add(newStudent);
+           }
+       }
     }
 
     // Truncates the table in the database and saves the new list into the student table
-    private static void saveToDatabase() throws SQLException {
-        statement.executeUpdate("TRUNCATE TABLE assignment.students, assignment.student_marks");
-        for (var student : afterStudentList){
-            double[] marks = student.getMarks();
-            // Add things to the Student table
-            PreparedStatement stmt = connection.prepareStatement(
-                    "INSERT INTO assignment.students (student_id, first_name, last_name, program) " +
-                    "VALUES (?, ?, ?, ?)");
+    /* TODO: Find a way to make it so it doesn't truncate and drop the tables to add new data.
+            Jim said that I could set up a flag to determine which records were edited so I could update those specific
+            records based on the ID. Maybe I could just make a function that ends up editing the record.
+     */
 
-            stmt.setString(1, student.getStudentID());
-            stmt.setString(2, student.getFname());
-            stmt.setString(3, student.getLname());
-            stmt.setString(4, student.getProgram());
-            stmt.executeUpdate();
+    private static void saveToDatabase() {
+        statement = null;
+        try
+        {
+            connection = DriverManager.getConnection(connectionString, username, password);
+            statement = connection.createStatement();
+            statement.executeUpdate("TRUNCATE TABLE assignment.students, assignment.student_marks");
 
-            // Add things to the marks table
-            PreparedStatement mkstmt = connection.prepareStatement(
-                    "INSERT INTO assignment.student_marks (mark_1, mark_2, mark_3, mark_4, mark_5, mark_6, id) " +
-                            "VALUES (?,?,?,?,?,?,?)"
-            );
-            int index = 1;
-            for (int i = 0; i < 6; i++){
-                mkstmt.setDouble(index, marks[i]);
-                index++;
+            for (var student : afterStudentList) {
+                double[] marks = student.getMarks();
+                // Add things to the Student table
+                PreparedStatement stmt = connection.prepareStatement(
+                        "INSERT INTO assignment.students (student_id, first_name, last_name, program) " +
+                                "VALUES (?, ?, ?, ?)");
+
+                stmt.setString(1, student.getStudentID());
+                stmt.setString(2, student.getFname());
+                stmt.setString(3, student.getLname());
+                stmt.setString(4, student.getProgram());
+                stmt.executeUpdate();
+
+                // Add things to the marks table
+                PreparedStatement mkstmt = connection.prepareStatement(
+                        "INSERT INTO assignment.student_marks (mark_1, mark_2, mark_3, mark_4, mark_5, mark_6, id) " +
+                                "VALUES (?,?,?,?,?,?,?)"
+                );
+                int index = 1;
+                for (int i = 0; i < 6; i++) {
+                    mkstmt.setDouble(index, marks[i]);
+                    index++;
+                }
+                mkstmt.setString(7, student.getStudentID());
+                mkstmt.executeUpdate();
+                statement.close();
+                resultSet.close();
             }
-            mkstmt.setString(7, student.getStudentID());
-            mkstmt.executeUpdate();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
-        connection.close();
     }
 
     // Event Handlers for the buttons
@@ -507,7 +521,7 @@ public class StudentFrame extends JFrame implements ActionListener {
             try
             {
                 saveToDatabase();
-            } catch (SQLException ex){
+            } catch (Exception ex){
                 ex.printStackTrace();
             }
 
