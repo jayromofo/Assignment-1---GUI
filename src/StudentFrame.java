@@ -56,7 +56,7 @@ public class StudentFrame extends JFrame implements ActionListener {
     // List that copies the initial list. All the new students and updated students are in this list
     private static ArrayList<Student> afterStudentList = new ArrayList<>();
     private static int currentIndex = 0;
-    private final static boolean DEBUGMODE = true;  // Turns on/off debug mode
+    private final static boolean DEBUGMODE = false;  // Turns on/off debug mode
     private static State currentState;
     static boolean isEditing = false;
 
@@ -97,7 +97,7 @@ public class StudentFrame extends JFrame implements ActionListener {
             // If there's items in the list then database loaded
             if (count != 0){
                 System.out.println(beforeStudentList.size());
-                afterStudentList = (ArrayList<Student>) beforeStudentList.clone();
+                afterStudentList = (ArrayList<Student>) beforeStudentList.clone(); // Clone the initial list
                 loadStudent(afterStudentList.get(0));
                 btnEdit.setEnabled(true);
             }
@@ -105,7 +105,6 @@ public class StudentFrame extends JFrame implements ActionListener {
             ///////////////////////////////////////////////////////////
             // ACTION LISTENERS
             ///////////////////////////////////////////////////////////
-
             // Add Button Event
             btnAdd.addActionListener(e -> {
                 // Clear all information
