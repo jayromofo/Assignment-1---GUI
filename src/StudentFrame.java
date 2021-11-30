@@ -10,7 +10,9 @@ import java.awt.event.ActionListener;
 import java.sql.*;
 import java.util.ArrayList;
 
-
+/**
+ * Creates the main frame
+ */
 public class StudentFrame extends JFrame implements ActionListener {
 
     // Keep track of the running state
@@ -72,7 +74,11 @@ public class StudentFrame extends JFrame implements ActionListener {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // FUNCTIONS
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Constructor for the Student Frame
+
+    /**
+     * Constructor for the main frame
+     * @param name Pass in the name of the application
+     */
     public StudentFrame(String name) {
         super(name);
         currentState = State.RUNNING;
@@ -230,7 +236,9 @@ public class StudentFrame extends JFrame implements ActionListener {
         }
     }
 
-    // Generate all the components of the frame
+    /**
+     * Generates all of the fields needed for the UI
+     */
     private void generateFields() {
         // Add all the student fields to center panel
         panFields.add(lblID);
@@ -269,7 +277,9 @@ public class StudentFrame extends JFrame implements ActionListener {
 
     }
 
-    // Set the initial state for the program
+    /**
+     * Set the initial state for the buttons in the UI
+     */
     private void setInitialState() {
         // Set the buttons and text fields
         currentState = State.RUNNING;
@@ -292,8 +302,9 @@ public class StudentFrame extends JFrame implements ActionListener {
         update();
     }
 
-    // Update all the information to get the button states
-    // Use this after each event to keep it up to date
+    /**
+     * Update all the information to get the button states. Use this after each event to keep it up to date
+     */
     private void update() {
         int length = afterStudentList.size();
         if (DEBUGMODE){
@@ -324,14 +335,18 @@ public class StudentFrame extends JFrame implements ActionListener {
         }
     }
 
-    // Clear the mark values
+    /**
+     * Clear all the mark text fields
+     */
     private void clearMarks() {
         for (JTextField marks : txtMarks) {
             marks.setText("");
         }
     }
 
-    // Clear all the text boxes on the top
+    /**
+     * Clear all the text fields
+     */
     private void clearText() {
         txtID.setText("");
         txtFirstName.setText("");
@@ -339,7 +354,10 @@ public class StudentFrame extends JFrame implements ActionListener {
         txtLastName.setText("");
     }
 
-    // Enables or disables the text boxes
+    /**
+     * Enable or disable all the text boxes
+     * @param result returns true or false
+     */
     private void enableTextBoxes(boolean result) {
         txtFirstName.setEnabled(result);
         txtID.setEnabled(result);
@@ -350,7 +368,9 @@ public class StudentFrame extends JFrame implements ActionListener {
         }
     }
 
-    // Gets the text from the text boxes and sets it in the created student.
+    /**
+     * Gets the text from the text boxes and sets it in the created student.
+     */
     private void createStudent(){
         Student currentStudent = afterStudentList.get(afterStudentList.size() - 1);
         String firstName = txtFirstName.getText();
@@ -380,7 +400,10 @@ public class StudentFrame extends JFrame implements ActionListener {
 
     }
 
-    // Loads the current student into the text boxes
+    /**
+     * Loads the current student into the text boxes
+     * @param student Pass in a student object to load
+     */
     private void loadStudent(Student student) {
         txtID.setText(student.getStudentID());
         txtProgram.setText(student.getProgram());
@@ -401,9 +424,10 @@ public class StudentFrame extends JFrame implements ActionListener {
         update();
     }
 
-    // When the program starts, this function ends up being called which makes it so it adds all the records from the
-    // database to a list.
-    // TODO: Find a way to make it so it doesn't get called if there are no records in the database
+    /**
+     * Adds the student table and marks table to a list and loads it into the program
+      * @throws SQLException
+     */
     public static void addFromDatabase() throws SQLException {
 
         selectQuery = "Select * from assignment.students INNER JOIN assignment.student_marks sm on students.student_id = sm.id " +
@@ -438,56 +462,11 @@ public class StudentFrame extends JFrame implements ActionListener {
        }
     }
 
-    // Truncates the table in the database and saves the new list into the student table
-    /* TODO: Find a way to make it so it doesn't truncate and drop the tables to add new data.
-            Jim said that I could set up a flag to determine which records were edited so I could update those specific
-            records based on the ID. Maybe I could just make a function that ends up editing the record.
+    /**
+     * Updates a student in the database
+     * @param originalID Students original studentID in case it gets updated
+     * @param student Student to be updated
      */
-
-    // When you click the save button it saves the list of students/marks to the database
-    private static void saveToDatabase() {
-        statement = null;
-        try
-        {
-            connection = DriverManager.getConnection(connectionString, username, password);
-            statement = connection.createStatement();
-            statement.executeUpdate("TRUNCATE TABLE assignment.students, assignment.student_marks");
-
-            for (var student : afterStudentList) {
-                double[] marks = student.getMarks();
-                // Add things to the Student table
-                PreparedStatement stmt = connection.prepareStatement(
-                        "INSERT INTO assignment.students (student_id, first_name, last_name, program) " +
-                                "VALUES (?, ?, ?, ?)");
-
-                stmt.setString(1, student.getStudentID());
-                stmt.setString(2, student.getFname());
-                stmt.setString(3, student.getLname());
-                stmt.setString(4, student.getProgram());
-                stmt.executeUpdate();
-
-                // Add things to the marks table
-                PreparedStatement mkstmt = connection.prepareStatement(
-                        "INSERT INTO assignment.student_marks (mark_1, mark_2, mark_3, " +
-                                "mark_4, mark_5, mark_6, id) " +
-                                "VALUES (?,?,?,?,?,?,?)"
-                );
-                int index = 1;
-                for (int i = 0; i < 6; i++) {
-                    mkstmt.setDouble(index, marks[i]);
-                    index++;
-                }
-                mkstmt.setString(7, student.getStudentID());
-                mkstmt.executeUpdate();
-                statement.close();
-                resultSet.close();
-            }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    // Updates the student and marks insides the database
     public static void updateRowInDatabase(String originalID, Student student) {
         String updateQuery = "UPDATE assignment.students " +
                 "SET student_id = ?, " +
@@ -543,8 +522,10 @@ public class StudentFrame extends JFrame implements ActionListener {
         }
     }
 
-    // Can probably use this instead of saving the whole list to the database
-    // TODO: See if there are any more options
+    /**
+     * Inserts a single student into the database
+     * @param student Student to be inserted into database
+     */
     public static void insertStudentIntoDatabase(Student student) {
         preparedStatement = null;
         String studentQuery = "INSERT INTO assignment.students (student_id, first_name, last_name, program) " +
@@ -622,12 +603,6 @@ public class StudentFrame extends JFrame implements ActionListener {
                 System.out.println("Out of range");
             }
         } // END OF NEXT BUTTON
-
-        //////////////////////////////////////////////////////////////////////////////////
-        // SAVE BUTTON EVENT
-        // When save button is clicked, it sends in the afterStudentList to the database
-
-
     } // END OF EVENTS
 } // END CLASS
 
