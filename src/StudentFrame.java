@@ -36,10 +36,10 @@ public class StudentFrame extends JFrame implements ActionListener {
     private final JTextField txtProgram = new JTextField(12);
     // Panel that holds all the buttons
     private final JPanel panButtonRow = new JPanel(new GridLayout(1, 4));
-    private final JButton btnLoad = new JButton("Load");
+
     private final JButton btnEdit = new JButton("Edit");
     private final JButton btnAdd = new JButton("Add");
-    private final JButton btnSave = new JButton("Save");
+
     // Bottom portion of the frame
     private final JLabel lblMarks = new JLabel("Marks");
     // Parent panel of the mark area
@@ -121,9 +121,9 @@ public class StudentFrame extends JFrame implements ActionListener {
                     btnEdit.setText("Done");
                     btnAdd.setEnabled(false);
                     // Disable other buttons
-                    btnLoad.setEnabled(false);
+
                     btnPrev.setEnabled(false);
-                    btnSave.setEnabled(false);
+
                     btnNext.setEnabled(false);
                     // Enable text boxes for input
                     enableTextBoxes(true);
@@ -143,9 +143,9 @@ public class StudentFrame extends JFrame implements ActionListener {
                     isEditing = true;
                     enableTextBoxes(true);
                     btnEdit.setText("Done");
-                    btnLoad.setEnabled(false);
+
                     btnPrev.setEnabled(false);
-                    btnSave.setEnabled(false);
+
                     btnNext.setEnabled(false);
                     btnAdd.setEnabled(false);
                 } else if (currentState == State.EDIT && isEditing == true) {
@@ -190,8 +190,8 @@ public class StudentFrame extends JFrame implements ActionListener {
                         // Enable the appropriate buttons
                         btnEdit.setText("Edit");
                         btnAdd.setEnabled(true);
-                        btnLoad.setEnabled(true);
-                        btnSave.setEnabled(true);
+
+
                         btnNext.setEnabled(true);
                         btnPrev.setEnabled(true);
                         currentState = State.RUNNING;
@@ -212,9 +212,9 @@ public class StudentFrame extends JFrame implements ActionListener {
                     } finally {
                         btnEdit.setText("Edit");
                         btnAdd.setEnabled(true);
-                        btnLoad.setEnabled(true);
+
                         btnNext.setEnabled(false);
-                        btnSave.setEnabled(true);
+
                         currentState = State.RUNNING;
                     }
                 }
@@ -222,8 +222,8 @@ public class StudentFrame extends JFrame implements ActionListener {
             // Add the other action listeners
             btnPrev.addActionListener(this);
             btnNext.addActionListener(this);
-            btnSave.addActionListener(this);
-            btnLoad.addActionListener(this);
+
+
         } catch (SQLException ex) {
             // End Constructor
             ex.printStackTrace();
@@ -242,10 +242,10 @@ public class StudentFrame extends JFrame implements ActionListener {
         panFields.add(lblLastName);
         panFields.add(txtLastName);
         // Add all the buttons on the bottom to the button panel
-        panButtonRow.add(btnLoad);
+
         panButtonRow.add(btnEdit);
         panButtonRow.add(btnAdd);
-        panButtonRow.add(btnSave);
+
         // Add the fields and button panels into the center panel
         panCenter.add(panFields, BorderLayout.CENTER);
         panCenter.add(panButtonRow, BorderLayout.SOUTH);
@@ -273,11 +273,11 @@ public class StudentFrame extends JFrame implements ActionListener {
     private void setInitialState() {
         // Set the buttons and text fields
         currentState = State.RUNNING;
-        btnLoad.setEnabled(true);
+
         btnAdd.setEnabled(true);
         btnPrev.setEnabled(false);
         btnEdit.setEnabled(false);
-        btnSave.setEnabled(false);
+
         btnNext.setEnabled(false);
         txtID.setEnabled(false);
         txtFirstName.setEnabled(false);
@@ -468,7 +468,8 @@ public class StudentFrame extends JFrame implements ActionListener {
 
                 // Add things to the marks table
                 PreparedStatement mkstmt = connection.prepareStatement(
-                        "INSERT INTO assignment.student_marks (mark_1, mark_2, mark_3, mark_4, mark_5, mark_6, id) " +
+                        "INSERT INTO assignment.student_marks (mark_1, mark_2, mark_3, " +
+                                "mark_4, mark_5, mark_6, id) " +
                                 "VALUES (?,?,?,?,?,?,?)"
                 );
                 int index = 1;
@@ -625,14 +626,7 @@ public class StudentFrame extends JFrame implements ActionListener {
         //////////////////////////////////////////////////////////////////////////////////
         // SAVE BUTTON EVENT
         // When save button is clicked, it sends in the afterStudentList to the database
-        if (e.getSource() == btnSave){
-            try
-            {
-                saveToDatabase();
-            } catch (Exception ex){
-                ex.printStackTrace();
-            }
-        }
+
 
     } // END OF EVENTS
 } // END CLASS
